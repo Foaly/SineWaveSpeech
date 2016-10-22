@@ -14,6 +14,7 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # Define sources and executable
+include_directories("src/*")
 set(EXECUTABLE_NAME "${PROJECT_NAME}")
 set(SOURCE_FILES src/main.cpp
                  )
@@ -21,6 +22,10 @@ set(SOURCE_FILES src/main.cpp
 # when we are on MacOS create a bundle and
 # put the rescources in it
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(SOURCE_FILES ${SOURCE_FILES}
+                   src/ResourcePath.hpp
+                   src/ResourcePath.mm)
+
   file(GLOB_RECURSE RESOURCE_FILES "data/*")
 
   add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCE_FILES} ${RESOURCE_FILES})
