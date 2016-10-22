@@ -17,7 +17,20 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(EXECUTABLE_NAME "${PROJECT_NAME}")
 set(SOURCE_FILES src/main.cpp
                  )
-add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
+
+# when we are on MacOS create a bundle and
+# put the rescources in it
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  file(GLOB_RECURSE RESOURCE_FILES "data/*")
+
+  add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCE_FILES} ${RESOURCE_FILES})
+
+  set_source_files_properties(${RESOURCE_FILES}
+    PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+else()
+  # on windows there are no bundles
+  add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
+endif()
 
 
 # Add our CMake scripts
