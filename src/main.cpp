@@ -1,10 +1,9 @@
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
-#include <fftw3.h>
 
 #include <iostream>
 
-// Here is a small helper for you! Have a look.
+#include "FFT.hpp"
 #include "ResourcePath.hpp"
 
 int main(int, char const**)
