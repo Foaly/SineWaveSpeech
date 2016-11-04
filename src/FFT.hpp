@@ -33,18 +33,16 @@ public:
     ~FFT();
 
     void                        process(const float* input);
-    const std::vector<float>&   realPart();
-    const std::vector<float>&   imagPart();
-    const std::vector<float>&   magnitudeVector();
-    const std::vector<float>&   logarithmicMagnitudeVector();
+    const std::vector<float>&   realPart() const;
+    const std::vector<float>&   imagPart() const;
+    float                       bias()     const;
+    float                       nyquist()  const;
+    
 
 private:
     fftwf_plan         m_plan;
     std::vector<float> m_realPart;
     std::vector<float> m_imagPart;
-    std::vector<float> m_magnitudeVector;
-    std::vector<float> m_logarithmicMagnitudeVector;
-    const unsigned int m_outputSize;
 };
 
 #endif // FFT_H

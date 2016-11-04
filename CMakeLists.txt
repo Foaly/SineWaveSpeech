@@ -19,6 +19,8 @@ set(EXECUTABLE_NAME "${PROJECT_NAME}")
 set(SOURCE_FILES src/main.cpp
                  src/FFT.hpp
                  src/FFT.cpp
+                 src/MagnitudeSpectrum.hpp
+                 src/MagnitudeSpectrum.cpp
                  )
 
 # when we are on MacOS create a bundle and
@@ -55,7 +57,7 @@ endif()
 
 # Detect and add FFTW
 # Find FFTW 3
-find_package(FFTW COMPONENTS fftw3f.a REQUIRED)
+find_package(FFTW COMPONENTS fftw3f REQUIRED)
 if(FFTW_FOUND)
     include_directories(${FFTW_INCLUDES})
     target_link_libraries(${EXECUTABLE_NAME} ${FFTW_LIBRARIES})

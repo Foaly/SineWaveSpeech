@@ -21,29 +21,18 @@
 #include "FFT.hpp"
 
 #include <mutex>
-#include <cmath>
-#include <numeric>
-#include <algorithm>
+
 
 namespace
 {
     std::mutex s_fftwMutex;
-    const float epsilon = std::numeric_limits<float>::epsilon();
 }
 
 
 FFT::FFT(unsigned int FFTLength) :
-    m_outputSize(FFTLength / 2 + 1) // FFTW returns N/2+1
+    m_realPart(FFTLength / 2 + 1, 0.f),// FFTW returns N/2+1
+    m_imagPart(FFTLength / 2 + 1, 0.f)
 {
-    m_realPart.resize(m_outputSize);
-    m_imagPart.resize(m_outputSize);
-
-    // make the initial state meaningful
-    std::fill(m_realPart.begin(), m_realPart.end(), 0.f );
-    std::fill(m_imagPart.begin(), m_imagPart.end(), 0.f );
-
-    m_magnitudeVector.reserve(m_outputSize);
-
     std::vector<float> tempInput(FFTLength);
     std::vector<float> tempReal(FFTLength);
     std::vector<float> tempImag(FFTLength);
@@ -54,7 +43,7 @@ FFT::FFT(unsigned int FFTLength) :
     dim.os = 1;
 
     std::lock_guard<std::mutex> lock(s_fftwMutex);
-    m_plan = fftwf_plan_guru_split_dft_r2c(1, &dim, 0, NULL, &tempInput[0], &tempReal[0], &tempImag[0], FFTW_ESTIMATE);
+    m_plan = fftwf_plan_guru_split_dft_r2c(1, &dim, 0, nullptr, tempInput.data(), tempReal.data(), tempImag.data(), FFTW_ESTIMATE);
 }
 
 
@@ -68,52 +57,30 @@ FFT::~FFT()
 void FFT::process(const float *input)
 {
     float* nonConstInput = const_cast<float*>(input);   // fftw does not take const input even though the data not be manipulated!
-    fftwf_execute_split_dft_r2c(m_plan, nonConstInput, &m_realPart[0], &m_imagPart[0]);
-    m_magnitudeVector.clear();
-    m_logarithmicMagnitudeVector.clear();
+    fftwf_execute_split_dft_r2c(m_plan, nonConstInput, m_realPart.data(), m_imagPart.data());
 }
 
 
-const std::vector<float>& FFT::realPart()
+const std::vector<float>& FFT::realPart() const
 {
     return m_realPart;
 }
 
 
-const std::vector<float>& FFT::imagPart()
+const std::vector<float>& FFT::imagPart() const
 {
-  return m_imagPart;
+    return m_imagPart;
 }
 
 
-const std::vector<float> &FFT::magnitudeVector()
+float FFT::bias() const
 {
-    if (m_magnitudeVector.size() == 0)
-    {
-        for (std::size_t i = 0; i < m_outputSize; ++i)
-        {
-            m_magnitudeVector.push_back(std::sqrt(m_realPart[i] * m_realPart[i] + m_imagPart[i] * m_imagPart[i]));
-        }
-    }
-
-    return m_magnitudeVector;
+    return m_realPart.front();
 }
 
 
-const std::vector<float> &FFT::logarithmicMagnitudeVector()
+float FFT::nyquist() const
 {
-    // update the magnitude vector
-    magnitudeVector();
-
-    if (m_logarithmicMagnitudeVector.size() == 0)
-    {
-        m_logarithmicMagnitudeVector.resize(m_magnitudeVector.size(), 0.f);
-        std::transform(m_magnitudeVector.begin(), m_magnitudeVector.end(), m_logarithmicMagnitudeVector.begin(),
-                       [] (float magnitude)
-                       {
-                           return std::log10(magnitude / 100 + epsilon); // log of 0 is undefined
-                       });
-    }
-
-    return m_logarithmicMagnitudeVector;
+    return m_realPart.back();
 }
+
