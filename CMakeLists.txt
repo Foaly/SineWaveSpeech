@@ -21,6 +21,7 @@ set(SOURCE_FILES src/main.cpp
                  src/FFT.cpp
                  src/MagnitudeSpectrum.hpp
                  src/MagnitudeSpectrum.cpp
+                 src/Sinusoid.hpp
                  )
 
 # when we are on MacOS create a bundle and
