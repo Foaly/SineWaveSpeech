@@ -7,6 +7,7 @@
 
 #include "MagnitudeSpectrum.hpp"
 #include "ResourcePath.hpp"
+#include "Sinusoid.hpp"
 
 
 int main(int, char const**)
@@ -16,22 +17,19 @@ int main(int, char const**)
     window.setFramerateLimit(60);
 
     // Load a sound
-    sf::SoundBuffer soundBuffer;
-    if (!soundBuffer.loadFromFile(resourcePath() + "hallo.wav")) {
+    sf::SoundBuffer originalSoundBuffer;
+    if (!originalSoundBuffer.loadFromFile(resourcePath() + "hallo.wav")) {
         std::cerr << "Could not load \"hello.wav\" sound." << std::endl;
         return EXIT_FAILURE;
     }
-    
-    sf::Sound sound(soundBuffer);
-
-    // Play the music
-    sound.play();
+    sf::Sound originalSound(originalSoundBuffer);
     
     const size_t FFTSize = 512;
+    const unsigned int sampleRate = originalSoundBuffer.getSampleRate();
     MagnitudeSpectrum magnitudeSpectrum(FFTSize);
     
     // get the samples as ints
-    std::vector<sf::Int16> rawSamples(soundBuffer.getSamples(), soundBuffer.getSamples() + soundBuffer.getSampleCount());
+    std::vector<sf::Int16> rawSamples(originalSoundBuffer.getSamples(), originalSoundBuffer.getSamples() + originalSoundBuffer.getSampleCount());
     // make sure it can always be devided through FFTSize without remainder, if necessary add 0's
     auto remainder = FFTSize - (rawSamples.size() % FFTSize);
     rawSamples.insert(rawSamples.end(), remainder, 0);
@@ -83,6 +81,56 @@ int main(int, char const**)
     std::cout << std::fixed << std::setprecision(5);
     std::cout << "min: " << minMagnitude << " max: " << maxMagnitude << std::endl;
 
+    
+    const float numberOfBins = FFTSize / 2.f;
+    const float bandwidth = sampleRate / numberOfBins;
+    const float middleFrequency = bandwidth / 2.f;
+    
+    std::vector<sf::Int16> outputSamples(rawSamples.size());
+    Sinusoid sinus(440, 1.0, sampleRate);
+    int x = 0;
+    
+    for (auto& mag: magnitudes)
+    {
+        // element 0 is the DC offset and we are not interested in that
+        mag.erase(mag.begin());
+        
+        auto highestAmp = std::max_element(mag.begin(), mag.end());
+        
+        // calculate the frequency
+        unsigned int index = std::distance(mag.begin(), highestAmp);
+        float frequency = middleFrequency + bandwidth * index;
+        float amplitude = *highestAmp;
+        
+        // threshold
+        if (amplitude > 0.01)
+        {
+            sinus.frequency(frequency);
+            sinus.amplitude = amplitude;
+        
+            for (int i = 0; i < 256; i++)
+            {
+                outputSamples[x + i] = sinus.getNextSample() * 32767.f;
+            }
+        }
+        else
+        {
+            std::fill_n(outputSamples.begin() + x, 256, 0.f);
+        }
+        
+        x += 256;
+    }
+    
+    
+    // load the generated sinus sound
+    sf::SoundBuffer sinusSoundBuffer;
+    if (!sinusSoundBuffer.loadFromSamples(outputSamples.data(), outputSamples.size(), 1, sampleRate)) {
+        std::cerr << "Could not load sinus sound." << std::endl;
+        return EXIT_FAILURE;
+    }
+    sf::Sound sinusSound(sinusSoundBuffer);
+    
+    
     // Start the game loop
     while (window.isOpen())
     {
@@ -104,8 +152,15 @@ int main(int, char const**)
                     case sf::Keyboard::Escape:
                         window.close();
                         break;
+                    case sf::Keyboard::O:
+                        originalSound.play();
+                        break;
+                    case sf::Keyboard::Space:
+                        sinusSound.play();
+                        break;
                     case sf::Keyboard::S:
-                        sound.play();
+                        sinusSoundBuffer.saveToFile("generatedSinus.wav");
+                        std::cout << "Saved generated sinus." << std::endl;
                         break;
                     default:
                         break;
