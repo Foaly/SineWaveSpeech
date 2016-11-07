@@ -18,8 +18,15 @@ int main(int, char const**)
 
     // Load a sound
     sf::SoundBuffer originalSoundBuffer;
-    if (!originalSoundBuffer.loadFromFile(resourcePath() + "hallo.wav")) {
+    if (!originalSoundBuffer.loadFromFile(resourcePath() + "hallo.wav"))
+    {
         std::cerr << "Could not load \"hello.wav\" sound." << std::endl;
+        return EXIT_FAILURE;
+    }
+    if (originalSoundBuffer.getChannelCount() > 1)
+    {
+        // TODO: Implement stereo support
+        std::cerr << "Loaded sound has to be mono (1 channel)." << std::endl;
         return EXIT_FAILURE;
     }
     sf::Sound originalSound(originalSoundBuffer);
