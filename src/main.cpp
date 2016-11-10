@@ -5,10 +5,8 @@
 #include <iomanip>
 #include <algorithm>
 
-#include "MagnitudeSpectrum.hpp"
+#include "SineWaveSpeech.hpp"
 #include "ResourcePath.hpp"
-#include "Sinusoid.hpp"
-
 
 int main(int, char const**)
 {
@@ -33,17 +31,10 @@ int main(int, char const**)
     
     const size_t FFTSize = 512;
     const unsigned int sampleRate = originalSoundBuffer.getSampleRate();
-    MagnitudeSpectrum magnitudeSpectrum(FFTSize);
+    SineWaveSpeech sineWaveSpeech(FFTSize);
     
     // get the samples as ints
     std::vector<sf::Int16> rawSamples(originalSoundBuffer.getSamples(), originalSoundBuffer.getSamples() + originalSoundBuffer.getSampleCount());
-    // make sure it can always be devided through FFTSize without remainder, if necessary add 0's
-    auto remainder = FFTSize - (rawSamples.size() % FFTSize);
-    rawSamples.insert(rawSamples.end(), remainder, 0);
-    
-    // calculate how many times the FFT will be called
-    // -1 to avoid out of bounds reading on last iteration because of our 50% sliding window
-    std::size_t numberOfRepeats = rawSamples.size() / (FFTSize / 2) - 1;
     
     // transform int samples into normalized float samples
     std::vector<float> samples(rawSamples.size());
@@ -53,85 +44,17 @@ int main(int, char const**)
                        return sample / 32767.f;
                    });
     
-    float                           maxMagnitude = 0.f;
-    float                           minMagnitude = 0.f;
-    std::vector<std::vector<float>> magnitudes;
+    std::vector<float> outputSamples = sineWaveSpeech.generateSineWaveSpeech(samples, sampleRate);
     
-    auto chunckBegin = samples.cbegin();
-    for (int i = 0; i < numberOfRepeats; i++)
-    {
-        std::vector<float> sampleChunck(FFTSize);
-        std::copy(chunckBegin, chunckBegin + FFTSize, sampleChunck.begin());
-        
-        magnitudeSpectrum.process(sampleChunck);
-        
-        magnitudes.push_back(magnitudeSpectrum.getMagnitudeSpectrum());
-        
-        // normalize FFT bins
-        std::transform(magnitudes.back().begin(), magnitudes.back().end(), magnitudes.back().begin(),
-                       [](float bin)
-                       {
-                           return bin / FFTSize;
-                       });
-        
-        chunckBegin += FFTSize / 2;
-        
-        // find the max FFT bin
-        auto minmax = std::minmax_element(magnitudes.back().begin(), magnitudes.back().end());
-        // check if it's bigger than any previous one
-        if (*minmax.second > maxMagnitude)
-            maxMagnitude = *minmax.second;
-        if (*minmax.first < minMagnitude)
-            minMagnitude = *minmax.first;
-    }
-    
-    std::cout << std::fixed << std::setprecision(5);
-    std::cout << "min: " << minMagnitude << " max: " << maxMagnitude << std::endl;
-
-    
-    const float numberOfBins = FFTSize / 2.f;
-    const float bandwidth = sampleRate / numberOfBins;
-    const float middleFrequency = bandwidth / 2.f;
-    
-    std::vector<sf::Int16> outputSamples(rawSamples.size());
-    Sinusoid sinus(440, 1.0, sampleRate);
-    int x = 0;
-    
-    for (auto& mag: magnitudes)
-    {
-        // element 0 is the DC offset and we are not interested in that
-        mag.erase(mag.begin());
-        
-        auto highestAmp = std::max_element(mag.begin(), mag.end());
-        
-        // calculate the frequency
-        unsigned int index = std::distance(mag.begin(), highestAmp);
-        float frequency = middleFrequency + bandwidth * index;
-        float amplitude = *highestAmp;
-        
-        // threshold
-        if (amplitude > 0.01)
-        {
-            sinus.frequency(frequency);
-            sinus.amplitude = amplitude;
-        
-            for (int i = 0; i < 256; i++)
-            {
-                outputSamples[x + i] = sinus.getNextSample() * 32767.f;
-            }
-        }
-        else
-        {
-            std::fill_n(outputSamples.begin() + x, 256, 0.f);
-        }
-        
-        x += 256;
-    }
-    
+    std::transform(outputSamples.begin(), outputSamples.end(), rawSamples.begin(),
+                   [](float sample)
+                   {
+                       return sample * 32767.f;
+                   });
     
     // load the generated sinus sound
     sf::SoundBuffer sinusSoundBuffer;
-    if (!sinusSoundBuffer.loadFromSamples(outputSamples.data(), outputSamples.size(), 1, sampleRate)) {
+    if (!sinusSoundBuffer.loadFromSamples(rawSamples.data(), rawSamples.size(), 1, sampleRate)) {
         std::cerr << "Could not load sinus sound." << std::endl;
         return EXIT_FAILURE;
     }

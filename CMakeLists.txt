@@ -9,6 +9,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
 endif()
 # (you can also set it on the command line: -D CMAKE_BUILD_TYPE=Release)
 
+message(STATUS "Configuring in ${CMAKE_BUILD_TYPE} mode.")
 
 # enable C++11
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -22,6 +23,8 @@ set(SOURCE_FILES src/main.cpp
                  src/MagnitudeSpectrum.hpp
                  src/MagnitudeSpectrum.cpp
                  src/Sinusoid.hpp
+                 src/SineWaveSpeech.hpp
+                 src/SineWaveSpeech.cpp
                  )
 
 # when we are on MacOS create a bundle and
