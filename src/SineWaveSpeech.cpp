@@ -96,7 +96,7 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
 void SineWaveSpeech::generateSineWaveSound()
 {
     const float numberOfBins = m_FFTSize / 2.f;
-    const float bandwidth = m_sampleRate / numberOfBins; // TODO: sampleRate or nyquist ?!
+    const float bandwidth = m_sampleRate / 2.f / numberOfBins;
     const float middleFrequency = bandwidth / 2.f;
     
     Sinusoid sinus(440, 1.0, m_sampleRate);
