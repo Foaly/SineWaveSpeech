@@ -74,7 +74,7 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
         std::transform(m_magnitudes.back().begin(), m_magnitudes.back().end(), m_magnitudes.back().begin(),
                        [this](float bin)
                        {
-                           return bin / m_FFTSize;
+                           return bin / (m_FFTSize / 2.f - 1);
                        });
         
         chunckBegin += m_FFTSize / 2;
