@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <numeric>
 
 #include "SineWaveSpeech.hpp"
 #include "Sinusoid.hpp"
@@ -60,6 +61,9 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
     m_magnitudes.clear();
     m_magnitudes.reserve(numberOfRepeats);
     
+    m_rms.clear();
+    m_rms.reserve(numberOfRepeats);
+    
     auto chunckBegin = samples.cbegin();
     for (int i = 0; i < numberOfRepeats; i++)
     {
@@ -86,10 +90,15 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
             maxMagnitude = *minmax.second;
         if (*minmax.first < minMagnitude)
             minMagnitude = *minmax.first;
+        
+        // calculate the RMS of the sample block
+        double meansquare = std::sqrt( ( std::inner_product( sampleChunck.begin(), sampleChunck.end(), sampleChunck.begin(), 0.0 ) ) / static_cast<double>( sampleChunck.size() ) );
+        
+        m_rms.push_back(meansquare);
     }
     
     std::cout << std::fixed << std::setprecision(5);
-    std::cout << "min: " << minMagnitude << " max: " << maxMagnitude << std::endl;
+    std::cout << "min: " << minMagnitude << " max: " << maxMagnitude << std::endl << std::endl;
 }
 
 
@@ -101,6 +110,7 @@ void SineWaveSpeech::generateSineWaveSound()
     
     Sinusoid sinus(440, 1.0, m_sampleRate);
     int x = 0;
+    std::size_t currentBlock = 0;
     
     for (auto& mag: m_magnitudes)
     {
@@ -112,7 +122,13 @@ void SineWaveSpeech::generateSineWaveSound()
         // calculate the frequency
         unsigned int index = std::distance(mag.begin(), highestAmp);
         float frequency = middleFrequency + bandwidth * index;
-        float amplitude = *highestAmp;
+        //float amplitude = *highestAmp;
+        
+        float totalChunckEnergy = std::accumulate(mag.begin(), mag.end(), 0.f); // TODO: overflows bigger than 1.f
+        //std::cout << totalChunckEnergy << std::endl;
+                
+        float amplitude = std::min(m_rms[currentBlock] * std::sqrt(2.f), 1.f); // clamp to 1, because sometimes
+        //std::cout << amplitude << std::endl;
         
         // threshold
         //if (amplitude > 0.01)
@@ -131,5 +147,6 @@ void SineWaveSpeech::generateSineWaveSound()
         //}
         
         x += 256;
+        currentBlock++;
     }
 }

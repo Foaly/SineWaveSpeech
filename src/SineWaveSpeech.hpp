@@ -31,6 +31,7 @@ private:
     std::size_t                     m_sampleRate;
     std::vector<std::vector<float>> m_magnitudes;
     std::vector<float>              m_outputSamples;
+    std::vector<float>              m_rms;
 };
 
 
