@@ -16,9 +16,9 @@ int main(int, char const**)
 
     // Load a sound
     sf::SoundBuffer originalSoundBuffer;
-    if (!originalSoundBuffer.loadFromFile(resourcePath() + "hallo.wav"))
+    if (!originalSoundBuffer.loadFromFile(resourcePath() + "Hallo.wav"))
     {
-        std::cerr << "Could not load \"hello.wav\" sound." << std::endl;
+        std::cerr << "Could not load \"Hello.wav\" sound." << std::endl;
         return EXIT_FAILURE;
     }
     if (originalSoundBuffer.getChannelCount() > 1)

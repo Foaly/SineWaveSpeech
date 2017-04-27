@@ -25,13 +25,13 @@ set(SOURCE_FILES src/main.cpp
                  src/Sinusoid.hpp
                  src/SineWaveSpeech.hpp
                  src/SineWaveSpeech.cpp
+                 src/ResourcePath.hpp
                  )
 
 # when we are on MacOS create a bundle and
 # put the rescources in it
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(SOURCE_FILES ${SOURCE_FILES}
-                   src/ResourcePath.hpp
                    src/ResourcePath.mm)
 
   file(GLOB_RECURSE RESOURCE_FILES "data/*")
@@ -41,7 +41,10 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set_source_files_properties(${RESOURCE_FILES}
     PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 else()
-  # on windows there are no bundles
+  # on windows/linux there are no bundles
+  set(SOURCE_FILES ${SOURCE_FILES}
+                   src/ResourcePath.cpp)
+
   add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 endif()
 
