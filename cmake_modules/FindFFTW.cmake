@@ -56,6 +56,10 @@ endif (FFTW_INCLUDES)
 # add the header to the include paths
 find_path (FFTW_INCLUDES fftw3.h ${FFTW_ROOT})
 
+if (UNIX)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".a")
+endif()
+
 # the following for each allows you to specify in the calling script which library you want
 # to link using COMPONENTS (for example fftw3-3, fftw3f-3 or fftw3l-3)
 foreach(FIND_FFTW_COMPONENT ${FFTW_FIND_COMPONENTS})
@@ -66,7 +70,7 @@ foreach(FIND_FFTW_COMPONENT ${FFTW_FIND_COMPONENTS})
   find_library (FFTW_LIBRARIES
           NAMES ${FIND_FFTW_COMPONENT_NAME}
           PATH_SUFFIXES "lib64" "lib"
-          PATHS "/usr/local/lib" /usr/local ${FFTW_ROOT})
+          PATHS "/usr/local/lib" "/bin" /usr/local ${FFTW_ROOT})
 
 endforeach()
 
