@@ -124,27 +124,35 @@ void SineWaveSpeech::generateSineWaveSound()
         float frequency = middleFrequency + bandwidth * index;
         //float amplitude = *highestAmp;
         
-        float totalChunckEnergy = std::accumulate(mag.begin(), mag.end(), 0.f); // TODO: overflows bigger than 1.f
-        //std::cout << totalChunckEnergy << std::endl;
-                
-        float amplitude = std::min(m_rms[currentBlock] * std::sqrt(2.f), 1.f); // clamp to 1, because sometimes
-        //std::cout << amplitude << std::endl;
+        if (frequency > 3000)
+        {
+            std::fill_n(m_outputSamples.begin() + x, 256, 0.f);
+        }
+        else
+        {
         
-        // threshold
-        //if (amplitude > 0.01)
-        //{
-            sinus.frequency(frequency);
-            sinus.amplitude = amplitude;
+            float totalChunckEnergy = std::accumulate(mag.begin(), mag.end(), 0.f); // TODO: overflows bigger than 1.f
+            //std::cout << totalChunckEnergy << std::endl;
+                
+            float amplitude = std::min(m_rms[currentBlock] * std::sqrt(2.f), 1.f); // clamp to 1, because sometimes
+            //std::cout << amplitude << std::endl;
             
-            for (int i = 0; i < 256; i++)
-            {
-                m_outputSamples[x + i] = sinus.getNextSample();
-            }
-        //}
-        //else
-        //{
-        //    std::fill_n(m_outputSamples.begin() + x, 256, 0.f);
-        //}
+            // threshold
+            //if (amplitude > 0.01)
+            //{
+                sinus.frequency(frequency);
+                sinus.amplitude = amplitude;
+            
+                for (int i = 0; i < 256; i++)
+                {
+                    m_outputSamples[x + i] = sinus.getNextSample();
+                }
+            //}
+            //else
+            //{
+            //    std::fill_n(m_outputSamples.begin() + x, 256, 0.f);
+            //}
+        }
         
         x += 256;
         currentBlock++;
