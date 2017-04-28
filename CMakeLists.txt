@@ -29,7 +29,7 @@ set(SOURCE_FILES src/FFT.hpp
 
 # when we are on MacOS create a bundle and
 # put the rescources in it
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if(APPLE)
   set(SOURCE_FILES ${SOURCE_FILES}
                    src/main.cpp
                    src/ResourcePath.mm)
@@ -80,7 +80,7 @@ if(FFTW_FOUND)
 endif()
 
 
-if(UNIX)
+if(UNIX AND NOT APPLE)
     find_library(JACK_LIBRARY
                  NAMES jack
                  PATH_SUFFIXES "lib64" "lib"
