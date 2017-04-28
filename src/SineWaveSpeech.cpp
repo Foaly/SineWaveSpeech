@@ -15,7 +15,7 @@
 
 SineWaveSpeech::SineWaveSpeech(std::size_t FFTSize) :
     m_FFTSize(FFTSize),
-    m_magnitudeSpectrum(FFTSize),
+    m_magnitudeSpectrum(FFTSize, MagnitudeSpectrum::Range::ExcludeDC_IncludeNyquist),
     m_sampleRate(0)
 {
     
@@ -104,7 +104,7 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
 
 void SineWaveSpeech::generateSineWaveSound()
 {
-    const float numberOfBins = m_FFTSize / 2.f;
+    const float numberOfBins = m_magnitudeSpectrum.numberOfBins();
     const float bandwidth = m_sampleRate / 2.f / numberOfBins;
     const float middleFrequency = bandwidth / 2.f;
     
@@ -114,9 +114,7 @@ void SineWaveSpeech::generateSineWaveSound()
     
     for (auto& mag: m_magnitudes)
     {
-        // element 0 is the DC offset and we are not interested in that
-        mag.erase(mag.begin());
-        
+        // find the highest amplitude
         auto highestAmp = std::max_element(mag.begin(), mag.end());
         
         // calculate the frequency

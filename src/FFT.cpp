@@ -30,7 +30,7 @@ namespace
 
 
 FFT::FFT(unsigned int FFTLength) :
-    m_realPart(FFTLength / 2 + 1, 0.f),// FFTW returns N/2+1
+    m_realPart(FFTLength / 2 + 1, 0.f),// FFTW includes the Nyquist, thus returning N/2+1
     m_imagPart(FFTLength / 2 + 1, 0.f)
 {
     std::vector<float> tempInput(FFTLength);
