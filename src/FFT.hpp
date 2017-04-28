@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
-// FFTSpectrum - draw a FFT spectrogram of a sound
-// Copyright (C) 2016  Maximilian Wagenbach
+// SineWaveSpeech - A sine wave speech synthesizer
+// Copyright (C) 2017  Maximilian Wagenbach
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
