@@ -23,6 +23,7 @@
 #include <iostream>
 #include <iomanip>
 #include <numeric>
+#include <algorithm>
 
 #include "SineWaveSpeech.hpp"
 #include "Sinusoid.hpp"
