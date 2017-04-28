@@ -17,8 +17,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # define sources
 include_directories("src/*")
 set(EXECUTABLE_NAME "${PROJECT_NAME}")
-set(SOURCE_FILES src/main.cpp
-                 src/FFT.hpp
+set(SOURCE_FILES src/FFT.hpp
                  src/FFT.cpp
                  src/MagnitudeSpectrum.hpp
                  src/MagnitudeSpectrum.cpp
@@ -32,6 +31,7 @@ set(SOURCE_FILES src/main.cpp
 # put the rescources in it
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(SOURCE_FILES ${SOURCE_FILES}
+                   src/main.cpp
                    src/ResourcePath.mm)
 
   file(GLOB_RECURSE RESOURCE_FILES "data/*")
@@ -41,6 +41,15 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set_source_files_properties(${RESOURCE_FILES}
     PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 else()
+    if(UNIX)
+        set(SOURCE_FILES ${SOURCE_FILES}
+                         src/captain_jack.cpp)
+    else()
+        set(SOURCE_FILES ${SOURCE_FILES}
+                         src/main.cpp)
+    endif()
+
+
   # on windows/linux there are no bundles
   set(SOURCE_FILES ${SOURCE_FILES}
                    src/ResourcePath.cpp)
@@ -68,4 +77,21 @@ find_package(FFTW COMPONENTS fftw3f REQUIRED)
 if(FFTW_FOUND)
     include_directories(${FFTW_INCLUDES})
     target_link_libraries(${EXECUTABLE_NAME} ${FFTW_LIBRARIES})
+endif()
+
+
+if(UNIX)
+    find_library(JACK_LIBRARY
+                 NAMES jack
+                 PATH_SUFFIXES "lib64" "lib"
+                 PATHS /usr/lib /usr/local/lib /opt/local/lib /sw/lib)
+    target_link_libraries(${EXECUTABLE_NAME} ${JACK_LIBRARY})
+    MESSAGE(STATUS "Jack Library: ${JACK_LIBRARY}")
+
+    find_library (JACKCPP_LIBRARIES
+                  NAMES jackcpp
+                  PATH_SUFFIXES "lib64" "lib"
+                  PATHS "/usr/local/lib" "/bin" /usr/local)
+    target_link_libraries(${EXECUTABLE_NAME} ${JACKCPP_LIBRARIES})
+    MESSAGE(STATUS "JackCPP Library: ${JACKCPP_LIBRARIES}")
 endif()

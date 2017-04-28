@@ -81,7 +81,7 @@ int main(int, char const**)
     sf::Sound sinusSound(sinusSoundBuffer);
     
     
-    // Start the game loop
+    // Start the main loop
     while (window.isOpen())
     {
         // Process events
