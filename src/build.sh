@@ -1,8 +1,3 @@
 #!/bin/sh
 
-CPPFILES = "FFT.cpp
-            MagnitudeSpectrum.cpp
-            SineWaveSpeech.cpp
-            CaptainJack.cpp"
-
-g++ -std=c++11 $CPPFILES -ljackcpp -ljack -o sineWaveSpeech
+g++ -std=c++11 -O3 FFT.cpp MagnitudeSpectrum.cpp SineWaveSpeech.cpp CaptainJack.cpp -ljackcpp -ljack -lfftw3f -o sineWaveSpeech
