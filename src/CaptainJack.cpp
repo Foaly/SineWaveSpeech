@@ -18,6 +18,7 @@
 //
 ////////////////////////////////////////////////////////////
 
+
 #include "SineWaveSpeech.hpp"
 
 #include <jackaudioio.hpp>
@@ -67,11 +68,7 @@ public:
 
 };
 
-///
-///
-///
 int main(int argc, char *argv[]) {
-
     CaptianJack cj;
 
     /// activate the client
@@ -104,5 +101,5 @@ int main(int argc, char *argv[]) {
     cj.disconnectInPort(0);	// Disconnecting ports.
     cj.disconnectOutPort(1);
     cj.close();	// stop client.
-    return 0;
+    return 0;//*/
 }

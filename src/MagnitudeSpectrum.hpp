@@ -53,6 +53,7 @@ private:
     Range                m_spectrumRangeType;
     std::vector<float>   m_magnitudeVector;
     std::vector<float>   m_logarithmicMagnitudeVector;
+    std::vector<float>   m_window;
 };
 
 

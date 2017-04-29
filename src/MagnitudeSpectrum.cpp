@@ -23,11 +23,22 @@
 #include <cmath>
 #include <numeric>
 #include <algorithm>
+#include <functional>
 #include <cassert>
 
 namespace
 {
     const float epsilon = std::numeric_limits<float>::epsilon();
+
+    std::vector<float> generateHannWindow(std::size_t size)
+    {
+        std::vector<float> window (size);
+        for(int i = 0; i  < size; ++i)
+        {
+            window[i] = 0.5 * (1 - std::cos(2*M_PI*i/size));
+        }
+        return window;
+    }
 }
 
 
@@ -35,7 +46,8 @@ namespace
 MagnitudeSpectrum::MagnitudeSpectrum(std::size_t FFTSize, Range spectrumRangeType) :
     m_fft(FFTSize),
     m_spectrumRangeType(spectrumRangeType),
-    m_magnitudeVector(FFTSize / 2, 0.f)
+    m_magnitudeVector(FFTSize / 2, 0.f),
+    m_window(generateHannWindow(FFTSize))
 {
     // Bithack to check if FFTSize is a power of 2
     // http://www.graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
@@ -58,8 +70,9 @@ MagnitudeSpectrum::MagnitudeSpectrum(std::size_t FFTSize, Range spectrumRangeTyp
 
 void MagnitudeSpectrum::process(std::vector<float> &sampleChunck)
 {
-    // TODO: apply window function
-    
+    // apply the window function
+    std::transform(sampleChunck.begin(), sampleChunck.end(), m_window.begin(), sampleChunck.begin(), std::multiplies<float>());
+
     // do the FFT
     m_fft.process(sampleChunck.data());
     
