@@ -43,7 +43,7 @@ if(APPLE)
 else()
     if(UNIX)
         set(SOURCE_FILES ${SOURCE_FILES}
-                         src/captain_jack.cpp)
+                         src/CaptainJack.cpp)
     else()
         set(SOURCE_FILES ${SOURCE_FILES}
                          src/main.cpp)
