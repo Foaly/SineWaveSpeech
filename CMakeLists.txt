@@ -12,7 +12,7 @@ endif()
 message(STATUS "Configuring in ${CMAKE_BUILD_TYPE} mode.")
 
 # enable C++11
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
 
 # define sources
 include_directories("src/*")

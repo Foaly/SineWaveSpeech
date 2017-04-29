@@ -32,7 +32,7 @@ class SineWaveSpeech
 {
 public:
     
-    SineWaveSpeech(std::size_t FFTSize);
+    SineWaveSpeech(std::size_t FFTSize, bool zeroPadAtEnd);
     
     std::vector<float> generateSineWaveSpeech(std::vector<float> samples, std::size_t sampleRate);
     
@@ -48,6 +48,7 @@ private:
     std::vector<float>              m_outputSamples;
     std::vector<float>              m_rms;
     Sinusoid                        m_sinus;
+    bool                            m_zeroPadAtEnd;
 };
 
 

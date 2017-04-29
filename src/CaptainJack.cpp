@@ -37,16 +37,25 @@ private:
 
 
 public:
-    /// Audio Callback Function:
-    /// - the output buffers are filled here
-    /// args
+    /// Jack Audio Callback Function
     virtual int audioCallback(jack_nframes_t nframes,
                               // A vector of pointers to each input port.
                               audioBufVector inBufs,
                               // A vector of pointers to each output port.
-                              audioBufVector outBufs) {
-        std::copy_n(inBufs[0], nframes, m_in.begin());
+                              audioBufVector outBufs)
+    {
+        for(int i = 0; i  < nframes; ++i)
+        {
+            inBufs[0][i] *= 5.f;
+        }
+
+        auto halfNFrames = nframes / 2;
+        std::copy_n(m_in.begin() + halfNFrames, halfNFrames, m_in.begin());
+
+        std::copy_n(inBufs[0], nframes, m_in.begin() + halfNFrames);
+
         auto out = m_sineGenerator.generateSineWaveSpeech(m_in, m_fs);
+
         for(int i = 0; i  < nframes; ++i)
         {
             outBufs[0][i] = out[i];
@@ -58,8 +67,8 @@ public:
     /// Constructor
     CaptianJack() :
         JackCpp::AudioIO("captian_jack", 1,1),
-        m_sineGenerator(512),
-        m_in (static_cast<std::size_t>(getBufferSize())),
+        m_sineGenerator(512, false),
+        m_in (static_cast<std::size_t>(getBufferSize()) * 1.5f, 0.f),
         m_fs (getSampleRate())
     {
         reserveInPorts(1);

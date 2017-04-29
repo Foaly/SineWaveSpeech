@@ -27,11 +27,12 @@
 
 #include "SineWaveSpeech.hpp"
 
-SineWaveSpeech::SineWaveSpeech(std::size_t FFTSize) :
+SineWaveSpeech::SineWaveSpeech(std::size_t FFTSize, bool zeroPadAtEnd) :
     m_FFTSize(FFTSize),
     m_magnitudeSpectrum(FFTSize, MagnitudeSpectrum::Range::ExcludeDC_IncludeNyquist),
     m_sampleRate(0),
-    m_sinus(440, 0.0, m_sampleRate)
+    m_sinus(440, 0.0, m_sampleRate),
+    m_zeroPadAtEnd(zeroPadAtEnd)
 {
     
 }
@@ -49,9 +50,12 @@ std::vector<float> SineWaveSpeech::generateSineWaveSpeech(std::vector<float> sam
     m_sampleRate = sampleRate;
     m_sinus.sampleRate = m_sampleRate;
     
-    // make sure it can always be devided through FFTSize without remainder, if necessary add 0's
-    auto remainder = m_FFTSize - (samples.size() % m_FFTSize);
-    samples.insert(samples.end(), remainder, 0.f);
+    if (m_zeroPadAtEnd)
+    {
+        // make sure it can always be devided through FFTSize without remainder, if necessary add 0's
+        auto remainder = m_FFTSize - (samples.size() % m_FFTSize);
+        samples.insert(samples.end(), remainder, 0.f);
+    }
     
     // TODO: check this
     m_outputSamples.clear();
@@ -113,8 +117,8 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
         m_rms.push_back(meansquare);
     }
     
-    std::cout << std::fixed << std::setprecision(5);
-    std::cout << "min: " << minMagnitude << " max: " << maxMagnitude << std::endl << std::endl;
+    //std::cout << std::fixed << std::setprecision(5);
+    //std::cout << "min: " << minMagnitude << " max: " << maxMagnitude << std::endl << std::endl;
 }
 
 
@@ -186,7 +190,7 @@ void SineWaveSpeech::generateSineWaveSound()
             //}
         }
         
-        x += 256;
+        x += m_FFTSize / 2;
         currentBlock++;
     }
 }
