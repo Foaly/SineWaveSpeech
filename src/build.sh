@@ -1,4 +1,8 @@
 #!/bin/sh
 
-g++ -std=c++11 pass_through.cpp -ljackcpp -ljack -o pass_through
+CPPFILES = "FFT.cpp
+            MagnitudeSpectrum.cpp
+            SineWaveSpeech.cpp
+            CaptainJack.cpp"
 
+g++ -std=c++11 $CPPFILES -ljackcpp -ljack -o sineWaveSpeech
