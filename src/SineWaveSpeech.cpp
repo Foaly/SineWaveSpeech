@@ -26,12 +26,12 @@
 #include <algorithm>
 
 #include "SineWaveSpeech.hpp"
-#include "Sinusoid.hpp"
 
 SineWaveSpeech::SineWaveSpeech(std::size_t FFTSize) :
     m_FFTSize(FFTSize),
     m_magnitudeSpectrum(FFTSize, MagnitudeSpectrum::Range::ExcludeDC_IncludeNyquist),
-    m_sampleRate(0)
+    m_sampleRate(0),
+    m_sinus(440, 0.0, m_sampleRate)
 {
     
 }
@@ -47,6 +47,7 @@ SineWaveSpeech::SineWaveSpeech(std::size_t FFTSize) :
 std::vector<float> SineWaveSpeech::generateSineWaveSpeech(std::vector<float> samples, std::size_t sampleRate)
 {
     m_sampleRate = sampleRate;
+    m_sinus.sampleRate = m_sampleRate;
     
     // make sure it can always be devided through FFTSize without remainder, if necessary add 0's
     auto remainder = m_FFTSize - (samples.size() % m_FFTSize);
@@ -123,7 +124,6 @@ void SineWaveSpeech::generateSineWaveSound()
     const float bandwidth = m_sampleRate / 2.f / numberOfBins;
     const float middleFrequency = bandwidth / 2.f;
     
-    Sinusoid sinus(440, 0.0, m_sampleRate);
     int x = 0;
     std::size_t currentBlock = 0;
     
@@ -157,27 +157,27 @@ void SineWaveSpeech::generateSineWaveSound()
                 //sinus.amplitude(amplitude);
             
                 int interpolationSteps = 50;
-                double oldFrequency = sinus.frequency();
+                double oldFrequency = m_sinus.frequency();
                 double frequencyStep = (frequency - oldFrequency) / interpolationSteps;
             
                 int amplitudeInterpolationSteps;
-                double oldAmplitude = sinus.amplitude();
+                double oldAmplitude = m_sinus.amplitude();
                 double amplitudeStep = (amplitude - oldAmplitude) / interpolationSteps;
             
                 for (int i = 0; i < 256; i++)
                 {
                     if (i < interpolationSteps)
                     {
-                        sinus.frequency(sinus.frequency() + frequencyStep);
-                        sinus.amplitude(sinus.amplitude() + amplitudeStep);
+                        m_sinus.frequency(m_sinus.frequency() + frequencyStep);
+                        m_sinus.amplitude(m_sinus.amplitude() + amplitudeStep);
                     }
                     else if (i == interpolationSteps)
                     {
-                        sinus.frequency(frequency);
-                        sinus.amplitude(amplitude);
+                        m_sinus.frequency(frequency);
+                        m_sinus.amplitude(amplitude);
                     }
                     
-                    m_outputSamples[x + i] = sinus.getNextSample();
+                    m_outputSamples[x + i] = m_sinus.getNextSample();
                 }
             //}
             //else
