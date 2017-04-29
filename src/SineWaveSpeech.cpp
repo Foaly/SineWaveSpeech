@@ -123,7 +123,7 @@ void SineWaveSpeech::generateSineWaveSound()
     const float bandwidth = m_sampleRate / 2.f / numberOfBins;
     const float middleFrequency = bandwidth / 2.f;
     
-    Sinusoid sinus(440, 1.0, m_sampleRate);
+    Sinusoid sinus(440, 0.0, m_sampleRate);
     int x = 0;
     std::size_t currentBlock = 0;
     
@@ -153,11 +153,30 @@ void SineWaveSpeech::generateSineWaveSound()
             // threshold
             //if (amplitude > 0.01)
             //{
-                sinus.frequency(frequency);
-                sinus.amplitude = amplitude;
+                //sinus.frequency(frequency);
+                //sinus.amplitude(amplitude);
+            
+                int interpolationSteps = 50;
+                double oldFrequency = sinus.frequency();
+                double frequencyStep = (frequency - oldFrequency) / interpolationSteps;
+            
+                int amplitudeInterpolationSteps;
+                double oldAmplitude = sinus.amplitude();
+                double amplitudeStep = (amplitude - oldAmplitude) / interpolationSteps;
             
                 for (int i = 0; i < 256; i++)
                 {
+                    if (i < interpolationSteps)
+                    {
+                        sinus.frequency(sinus.frequency() + frequencyStep);
+                        sinus.amplitude(sinus.amplitude() + amplitudeStep);
+                    }
+                    else if (i == interpolationSteps)
+                    {
+                        sinus.frequency(frequency);
+                        sinus.amplitude(amplitude);
+                    }
+                    
                     m_outputSamples[x + i] = sinus.getNextSample();
                 }
             //}

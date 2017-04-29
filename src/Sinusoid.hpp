@@ -36,8 +36,8 @@ class Sinusoid
 {
 public:
     Sinusoid(double _frequency, double _amplitude, double _sampleRate) :
-        amplitude(_amplitude),
         sampleRate(_sampleRate),
+        m_amplitude(_amplitude),
         m_x(0.0),
         m_y(1.0)
     {
@@ -50,7 +50,7 @@ public:
         m_x = m_x * m_cosinus + m_y * m_sinus;
         m_y = oldX * -m_sinus + m_y * m_cosinus;
         
-        return amplitude * oldX;
+        return m_amplitude * oldX;
     }
     
     void frequency(double frequency)
@@ -65,11 +65,22 @@ public:
     {
         return m_frequency;
     }
+    
+    void amplitude(double amplitude)
+    {
+        m_amplitude = amplitude;
+    }
+    
+    double amplitude()
+    {
+        return m_amplitude;
+    }
 
-    double amplitude;
+    
     double sampleRate;
     
 private:
+    double m_amplitude;
     double m_frequency;
     double m_sinus;
     double m_cosinus;
