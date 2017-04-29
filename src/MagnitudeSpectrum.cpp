@@ -44,7 +44,7 @@ MagnitudeSpectrum::MagnitudeSpectrum(std::size_t FFTSize, Range spectrumRangeTyp
     switch (m_spectrumRangeType)
     {
         case Range::IncludeDC_IncludeNyquist:
-            m_magnitudeVector.resize(FFTSize / 2 + 1);
+            m_magnitudeVector.resize(FFTSize / 2 + 1, 0.f);
             break;
         case Range::ExcludeDC_ExcludeNyquist:
             m_magnitudeVector.resize(FFTSize / 2 - 1);
@@ -79,7 +79,7 @@ void MagnitudeSpectrum::process(std::vector<float> &sampleChunck)
     }
 
     // calculate the magnitude spectrum
-    std::transform(m_fft.realPart().begin() + startBin, m_fft.realPart().end() - lastBin, m_fft.imagPart().begin(), m_magnitudeVector.begin(),
+    std::transform(m_fft.realPart().begin() + startBin, m_fft.realPart().end() - lastBin, m_fft.imagPart().begin() + startBin, m_magnitudeVector.begin(),
                    [] (float realPart, float imagPart)
                    {
                        return std::sqrt(realPart * realPart + imagPart * imagPart);
