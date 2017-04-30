@@ -68,7 +68,7 @@ MagnitudeSpectrum::MagnitudeSpectrum(std::size_t FFTSize, Range spectrumRangeTyp
 }
 
 
-void MagnitudeSpectrum::process(std::vector<float> &sampleChunck)
+void MagnitudeSpectrum::process(std::vector<float> sampleChunck)
 {
     // apply the window function
     std::transform(sampleChunck.begin(), sampleChunck.end(), m_window.begin(), sampleChunck.begin(), std::multiplies<float>());

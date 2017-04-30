@@ -42,7 +42,7 @@ public:
     
     MagnitudeSpectrum(std::size_t FFTSize, Range spectrumRangeType = Range::ExcludeDC_IncludeNyquist);
     
-    void                      process(std::vector<float>& sampleChunck);
+    void                      process(std::vector<float> sampleChunck);
     const std::vector<float>& getMagnitudeSpectrum() const;
     const std::vector<float>  getLogarithmicMagnitudeSpectrum();
     std::size_t               numberOfBins();
