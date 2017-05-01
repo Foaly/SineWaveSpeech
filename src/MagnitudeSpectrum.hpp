@@ -49,11 +49,11 @@ public:
     
     
 private:
-    FFT                  m_fft;
-    Range                m_spectrumRangeType;
-    std::vector<float>   m_magnitudeVector;
-    std::vector<float>   m_logarithmicMagnitudeVector;
-    std::vector<float>   m_window;
+    FFT                        m_fft;
+    Range                      m_spectrumRangeType;
+    std::vector<float>         m_magnitudeVector;
+    std::vector<float>         m_logarithmicMagnitudeVector;
+    const std::vector<float>   m_window;
 };
 
 

@@ -33,9 +33,9 @@ namespace
     std::vector<float> generateHannWindow(std::size_t size)
     {
         std::vector<float> window (size);
-        for(int i = 0; i  < size; ++i)
+        for(int i = 0; i < size; ++i)
         {
-            window[i] = 0.5 * (1 - std::cos(2*M_PI*i/size));
+            window[i] = 0.5f * ( 1.f - std::cos( 2.f * M_PI * i / static_cast<float>(size) ) );
         }
         return window;
     }
