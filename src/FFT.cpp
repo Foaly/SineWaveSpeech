@@ -31,33 +31,47 @@ namespace
 
 FFT::FFT(unsigned int FFTLength) :
     m_realPart(FFTLength / 2 + 1, 0.f),// FFTW includes the Nyquist, thus returning N/2+1
-    m_imagPart(FFTLength / 2 + 1, 0.f)
+    m_imagPart(FFTLength / 2 + 1, 0.f),
+    m_complexResult(FFTLength / 2 + 1, 0.0)
 {
     std::vector<float> tempInput(FFTLength);
     std::vector<float> tempReal(FFTLength);
     std::vector<float> tempImag(FFTLength);
 
-    fftwf_iodim dim;
-    dim.n  = FFTLength;
-    dim.is = 1;
-    dim.os = 1;
+    //fftwf_iodim dim;
+    //dim.n  = FFTLength;
+    //dim.is = 1;
+    //dim.os = 1;
 
     std::lock_guard<std::mutex> lock(s_fftwMutex);
-    m_plan = fftwf_plan_guru_split_dft_r2c(1, &dim, 0, nullptr, tempInput.data(), tempReal.data(), tempImag.data(), FFTW_ESTIMATE);
+    //m_plan = fftwf_plan_guru_split_dft_r2c(1, &dim, 0, nullptr, tempInput.data(), tempReal.data(), tempImag.data(), FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
+    //fftwf_print_plan(m_plan);
+
+    m_input = nullptr;
+    m_plan2 = fftwf_plan_dft_r2c_1d(FFTLength, m_input, reinterpret_cast<fftwf_complex*>(m_complexResult.data()), FFTW_ESTIMATE);
 }
 
 
 FFT::~FFT()
 {
     std::lock_guard<std::mutex> lock(s_fftwMutex);
-    fftwf_destroy_plan(m_plan);
+    //fftwf_destroy_plan(m_plan);
+    fftwf_destroy_plan(m_plan2);
 }
 
 
 void FFT::process(const float *input)
 {
     float* nonConstInput = const_cast<float*>(input);   // fftw does not take const input even though the data not be manipulated!
-    fftwf_execute_split_dft_r2c(m_plan, nonConstInput, m_realPart.data(), m_imagPart.data());
+    //fftwf_execute_split_dft_r2c(m_plan, nonConstInput, m_realPart.data(), m_imagPart.data());
+}
+
+
+std::vector<std::complex<float>> FFT::process2(const float* input)
+{
+    m_input = const_cast<float*>(input);
+    fftwf_execute(m_plan2);
+    return m_complexResult;
 }
 
 

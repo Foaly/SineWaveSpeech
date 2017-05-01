@@ -74,7 +74,7 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
     // calculate how many times the FFT will be called
     // -1 to avoid out of bounds reading on last iteration because of our 50% sliding window
     const std::size_t numberOfRepeats = samples.size() / (m_FFTSize / 2) - 1;
-    
+
     float maxMagnitude = 0.f;
     float minMagnitude = 0.f;
     
@@ -192,5 +192,6 @@ void SineWaveSpeech::generateSineWaveSound()
         
         x += m_FFTSize / 2;
         currentBlock++;
+        //std::cout << m_sinus.frequency() << " Hz @ " << m_sinus.amplitude() << std::endl;
     }
 }

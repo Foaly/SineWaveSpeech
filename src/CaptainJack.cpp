@@ -44,9 +44,10 @@ public:
                               // A vector of pointers to each output port.
                               audioBufVector outBufs)
     {
+        double sum = 0.0;
         for(int i = 0; i  < nframes; ++i)
         {
-            inBufs[0][i] *= 5.f;
+            //inBufs[0][i] *= 5.f;
         }
 
         auto halfNFrames = nframes / 2;
@@ -59,7 +60,11 @@ public:
         for(int i = 0; i  < nframes; ++i)
         {
             outBufs[0][i] = out[i];
+            sum = sum + inBufs[0][i] * inBufs[0][i];
         }
+
+        double meansquare = std::sqrt( sum / static_cast<double>( nframes ) );
+        //std::cout << "Output meansquare: " << meansquare << std::endl;
 
         return 0;
     }
@@ -83,19 +88,18 @@ int main(int argc, char *argv[]) {
     /// activate the client
     cj.start();
 
-    /// connect input
-    cj.connectFromPhysical(0,0);
-
     /// connect ports to stereo ports
     cj.connectToPhysical(0,0);		// connects this client out port 0 to physical destination port 0
     cj.connectToPhysical(0,1);		// connects this client out port 1 to physical destination port 1
+
+    /// connect input
+    cj.connectFromPhysical(0,0);
 
     ///print names
     std::cout << "outport names:" << std::endl;
     for(unsigned int i = 0; i < cj.outPorts(); i++) {
         std::cout << "\t" << cj.getOutputPortName(i) << std::endl;
     }
-
 
     ///print names
     std::cout << "inport names:" << std::endl;

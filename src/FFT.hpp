@@ -21,6 +21,7 @@
 #ifndef FFT_H
 #define FFT_H
 
+#include <complex>
 #include <fftw3.h>
 
 #include <vector> // replace with boost aligned vector for SIMD
@@ -33,6 +34,7 @@ public:
     ~FFT();
 
     void                        process(const float* input);
+    std::vector<std::complex<float>> process2(const float* input);
     const std::vector<float>&   realPart() const;
     const std::vector<float>&   imagPart() const;
     float                       bias()     const;
@@ -40,9 +42,12 @@ public:
     
 
 private:
-    fftwf_plan         m_plan;
+    //fftwf_plan         m_plan;
+    fftwf_plan          m_plan2;
     std::vector<float> m_realPart;
     std::vector<float> m_imagPart;
+    float*             m_input;
+    std::vector<std::complex<float>> m_complexResult;
 };
 
 #endif // FFT_H

@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <functional>
 #include <cassert>
+#include <iostream>
+#include <complex>
 
 namespace
 {
@@ -70,12 +72,24 @@ MagnitudeSpectrum::MagnitudeSpectrum(std::size_t FFTSize, Range spectrumRangeTyp
 
 void MagnitudeSpectrum::process(std::vector<float> sampleChunck)
 {
+    //m_window = generateHannWindow(512);
+
     // apply the window function
     std::transform(sampleChunck.begin(), sampleChunck.end(), m_window.begin(), sampleChunck.begin(), std::multiplies<float>());
 
+    /*for (int i = 0; i < 20; ++i)
+        std::cout << m_window[i] << "\n";
+    std::cout << std::endl;*/
+
+
     // do the FFT
-    m_fft.process(sampleChunck.data());
-    
+    std::vector<std::complex<float>> complexResult = m_fft.process2(sampleChunck.data());
+
+   for (int i = 0; i < complexResult.size(); ++i)
+       std::cout << complexResult[i].real() << std::endl;
+   std::cout << std::endl;
+
+
     std::size_t startBin = 0;
     if (m_spectrumRangeType == Range::ExcludeDC_IncludeNyquist ||
         m_spectrumRangeType == Range::ExcludeDC_ExcludeNyquist)
@@ -92,12 +106,16 @@ void MagnitudeSpectrum::process(std::vector<float> sampleChunck)
     }
 
     // calculate the magnitude spectrum
-    std::transform(m_fft.realPart().begin() + startBin, m_fft.realPart().end() - lastBin, m_fft.imagPart().begin() + startBin, m_magnitudeVector.begin(),
+    /*std::transform(m_fft.realPart().begin() + startBin, m_fft.realPart().end() - lastBin, m_fft.imagPart().begin() + startBin, m_magnitudeVector.begin(),
                    [] (float realPart, float imagPart)
                    {
                        return std::sqrt(realPart * realPart + imagPart * imagPart);
-                   });
-    
+                   });*/
+    std::transform(complexResult.begin() + startBin, complexResult.end() - lastBin, m_magnitudeVector.begin(),
+                  [] (std::complex<float> c)
+                  {
+                      return std::sqrt(c.real() * c.real() + c.imag() * c.imag());
+                  });
 }
 
 
