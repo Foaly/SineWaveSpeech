@@ -22,8 +22,9 @@
 #define MAGNITUDESPECTRUM_H
 
 #include <vector>
+#include <complex>
 
-#include "FFT.hpp"
+//#include "FFT.hpp"
 
 
 class MagnitudeSpectrum
@@ -49,11 +50,13 @@ public:
     
     
 private:
-    FFT                        m_fft;
+    //FFT                        m_fft;
+    std::size_t                m_FFTSize;
+    std::vector<std::complex<float>> m_fftResult;
     Range                      m_spectrumRangeType;
     std::vector<float>         m_magnitudeVector;
     std::vector<float>         m_logarithmicMagnitudeVector;
-    const std::vector<float>   m_window;
+    std::vector<float>   m_window;
 };
 
 

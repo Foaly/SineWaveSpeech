@@ -20,11 +20,15 @@
 
 #include "MagnitudeSpectrum.hpp"
 
+#include "simple_fft/fft.hpp"
+
 #include <cmath>
 #include <numeric>
 #include <algorithm>
 #include <functional>
 #include <cassert>
+#include <complex>
+#include <iostream>
 
 namespace
 {
@@ -44,7 +48,9 @@ namespace
 
 
 MagnitudeSpectrum::MagnitudeSpectrum(std::size_t FFTSize, Range spectrumRangeType) :
-    m_fft(FFTSize),
+//    m_fft(FFTSize),
+    m_FFTSize(FFTSize),
+    m_fftResult(FFTSize),
     m_spectrumRangeType(spectrumRangeType),
     m_magnitudeVector(FFTSize / 2, 0.f),
     m_window(generateHannWindow(FFTSize))
@@ -70,12 +76,19 @@ MagnitudeSpectrum::MagnitudeSpectrum(std::size_t FFTSize, Range spectrumRangeTyp
 
 void MagnitudeSpectrum::process(std::vector<float> sampleChunck)
 {
+    // haha wtf?x
+    m_window = generateHannWindow(m_FFTSize);
+
     // apply the window function
     std::transform(sampleChunck.begin(), sampleChunck.end(), m_window.begin(), sampleChunck.begin(), std::multiplies<float>());
 
     // do the FFT
-    m_fft.process(sampleChunck.data());
-    
+    //m_fft.process(sampleChunck.data());
+
+    const char* error = nullptr;
+    if( !simple_fft::FFT(sampleChunck, m_fftResult, m_FFTSize, error) )
+        std::cout << error << std::endl;
+
     std::size_t startBin = 0;
     if (m_spectrumRangeType == Range::ExcludeDC_IncludeNyquist ||
         m_spectrumRangeType == Range::ExcludeDC_ExcludeNyquist)
@@ -92,10 +105,10 @@ void MagnitudeSpectrum::process(std::vector<float> sampleChunck)
     }
 
     // calculate the magnitude spectrum
-    std::transform(m_fft.realPart().begin() + startBin, m_fft.realPart().end() - lastBin, m_fft.imagPart().begin() + startBin, m_magnitudeVector.begin(),
-                   [] (float realPart, float imagPart)
+    std::transform(m_fftResult.begin() + startBin, m_fftResult.end() - lastBin, m_magnitudeVector.begin(),
+                   [] (std::complex<float> c)
                    {
-                       return std::sqrt(realPart * realPart + imagPart * imagPart);
+                       return std::sqrt(c.real() * c.real() + c.imag() * c.imag());
                    });
     
 }
