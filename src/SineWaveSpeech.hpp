@@ -24,6 +24,7 @@
 #define SINEWAVESPEECH_HPP
 
 #include <vector>
+#include <atomic>
 
 #include "MagnitudeSpectrum.hpp"
 #include "Sinusoid.hpp"
@@ -36,6 +37,7 @@ public:
     SineWaveSpeech(std::size_t FFTSize, bool zeroPadAtEnd);
     
     std::vector<float> generateSineWaveSpeech(std::vector<float> samples, std::size_t sampleRate);
+    void nextToneGenerator();
     
 private:
     
@@ -48,7 +50,9 @@ private:
     std::vector<std::vector<float>> m_magnitudes;
     std::vector<float>              m_outputSamples;
     std::vector<float>              m_rms;
-    Sawtooth                        m_sinus;
+    Sinusoid                        m_sinus;
+    Sawtooth                        m_sawtooth;
+    std::atomic<unsigned int>       m_toneGenerator;
     bool                            m_zeroPadAtEnd;
 };
 

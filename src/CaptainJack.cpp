@@ -71,7 +71,6 @@ class CaptianJack: public JackCpp::AudioIO {
 private:
     std::vector<float> m_in;
     std::size_t m_fs;
-    SineWaveSpeech m_sineGenerator;
 
 
 public:
@@ -82,10 +81,10 @@ public:
                               // A vector of pointers to each output port.
                               audioBufVector outBufs)
     {
-        for(int i = 0; i  < nframes; ++i)
+       /* for(int i = 0; i  < nframes; ++i)
         {
             inBufs[0][i] *= 5.f;
-        }
+        }*/
 
         auto halfNFrames = nframes / 2;
         std::copy_n(m_in.begin() + halfNFrames, halfNFrames, m_in.begin());
@@ -111,29 +110,37 @@ public:
     {
         reserveInPorts(1);
         reserveOutPorts(2);
+
+        /// activate the client
+        start();
+
+        /// connect input
+        connectFromPhysical(0,0);
+
+        /// connect ports to stereo ports
+        connectToPhysical(0,0);		// connects this client out port 0 to physical destination port 0
+        connectToPhysical(0,1);		// connects this client out port 1 to physical destination port 1
     }
 
+    ~CaptianJack()
+    {
+        disconnectInPort(0);	// Disconnecting ports.
+        disconnectOutPort(0);
+        close();	// stop client.
+    }
+
+
+    SineWaveSpeech m_sineGenerator;
 };
 
 int main(int argc, char *argv[]) {
     CaptianJack cj;
-
-    /// activate the client
-    cj.start();
-
-    /// connect input
-    cj.connectFromPhysical(0,0);
-
-    /// connect ports to stereo ports
-    cj.connectToPhysical(0,0);		// connects this client out port 0 to physical destination port 0
-    cj.connectToPhysical(0,1);		// connects this client out port 1 to physical destination port 1
 
     ///print names
     std::cout << "outport names:" << std::endl;
     for(unsigned int i = 0; i < cj.outPorts(); i++) {
         std::cout << "\t" << cj.getOutputPortName(i) << std::endl;
     }
-
 
     ///print names
     std::cout << "inport names:" << std::endl;
@@ -144,19 +151,17 @@ int main(int argc, char *argv[]) {
     while (true)
     {
         auto c = getch();
-        std::cout << c << std::endl;
         switch (c) {
-        case 'e':
+        case 'q':
             return 0;
         case 'w':
-
+            cj.m_sineGenerator.nextToneGenerator();
+            break;
+        default:
+            std::cout << c << std::endl;
             break;
         }
     }
 
-    /// never reached:!=
-    cj.close();	// stop client.
-    cj.disconnectInPort(0);	// Disconnecting ports.
-    cj.disconnectOutPort(0);
-    return 0;//*/
+    return 0;
 }

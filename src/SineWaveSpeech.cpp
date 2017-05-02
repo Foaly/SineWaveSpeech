@@ -32,6 +32,8 @@ SineWaveSpeech::SineWaveSpeech(std::size_t FFTSize, bool zeroPadAtEnd) :
     m_magnitudeSpectrum(FFTSize, MagnitudeSpectrum::Range::ExcludeDC_IncludeNyquist),
     m_sampleRate(0),
     m_sinus(440, 0.0, m_sampleRate),
+    m_sawtooth(440, 0.0, m_sampleRate),
+    m_toneGenerator(0),
     m_zeroPadAtEnd(zeroPadAtEnd)
 {
     
@@ -49,6 +51,7 @@ std::vector<float> SineWaveSpeech::generateSineWaveSpeech(std::vector<float> sam
 {
     m_sampleRate = sampleRate;
     m_sinus.sampleRate = m_sampleRate;
+    m_sawtooth.sampleRate = m_sampleRate;
     
     if (m_zeroPadAtEnd)
     {
@@ -122,6 +125,13 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
 }
 
 
+void SineWaveSpeech::nextToneGenerator()
+{
+    ++m_toneGenerator;
+    m_toneGenerator = m_toneGenerator % 2;
+}
+
+
 void SineWaveSpeech::generateSineWaveSound()
 {
     const float numberOfBins = m_magnitudeSpectrum.numberOfBins();
@@ -162,26 +172,57 @@ void SineWaveSpeech::generateSineWaveSound()
             
                 int interpolationSteps = 50;
                 double oldFrequency = m_sinus.frequency();
-                double frequencyStep = (frequency - oldFrequency) / interpolationSteps;
-            
-                int amplitudeInterpolationSteps;
                 double oldAmplitude = m_sinus.amplitude();
+
+                switch (m_toneGenerator)
+                {
+                    case 1:
+                        oldFrequency = m_sawtooth.frequency();
+                        oldAmplitude = m_sawtooth.amplitude();
+                        break;
+                    default:
+                        break;
+                }
+
+                double frequencyStep = (frequency - oldFrequency) / interpolationSteps;
                 double amplitudeStep = (amplitude - oldAmplitude) / interpolationSteps;
             
                 for (int i = 0; i < 256; i++)
                 {
-                    if (i < interpolationSteps)
+                    switch (m_toneGenerator)
                     {
-                        m_sinus.frequency(m_sinus.frequency() + frequencyStep);
-                        m_sinus.amplitude(m_sinus.amplitude() + amplitudeStep);
+                        case 0:
+                            if (i < interpolationSteps)
+                            {
+                                m_sinus.frequency(m_sinus.frequency() + frequencyStep);
+                                m_sinus.amplitude(m_sinus.amplitude() + amplitudeStep);
+                            }
+                            else if (i == interpolationSteps)
+                            {
+                                m_sinus.frequency(frequency);
+                                m_sinus.amplitude(amplitude);
+                            }
+
+                            m_outputSamples[x + i] = m_sinus.getNextSample();
+                            break;
+                        case 1:
+                            if (i < interpolationSteps)
+                            {
+                                m_sawtooth.frequency(m_sawtooth.frequency() + frequencyStep);
+                                m_sawtooth.amplitude(m_sawtooth.amplitude() + amplitudeStep);
+                            }
+                            else if (i == interpolationSteps)
+                            {
+                                m_sawtooth.frequency(frequency);
+                                m_sawtooth.amplitude(amplitude);
+                            }
+
+                            m_outputSamples[x + i] = m_sawtooth.getNextSample();
+                            break;
+                        default:
+                            break;
                     }
-                    else if (i == interpolationSteps)
-                    {
-                        m_sinus.frequency(frequency);
-                        m_sinus.amplitude(amplitude);
-                    }
-                    
-                    m_outputSamples[x + i] = m_sinus.getNextSample();
+
                 }
             //}
             //else
