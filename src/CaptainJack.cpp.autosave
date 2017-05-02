@@ -82,10 +82,10 @@ public:
                               // A vector of pointers to each output port.
                               audioBufVector outBufs)
     {
-        for(int i = 0; i  < nframes; ++i)
+       /* for(int i = 0; i  < nframes; ++i)
         {
             inBufs[0][i] *= 5.f;
-        }
+        }*/
 
         auto halfNFrames = nframes / 2;
         std::copy_n(m_in.begin() + halfNFrames, halfNFrames, m_in.begin());

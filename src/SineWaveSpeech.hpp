@@ -27,6 +27,7 @@
 
 #include "MagnitudeSpectrum.hpp"
 #include "Sinusoid.hpp"
+#include "Sawtooth.hpp"
 
 class SineWaveSpeech
 {
@@ -47,7 +48,7 @@ private:
     std::vector<std::vector<float>> m_magnitudes;
     std::vector<float>              m_outputSamples;
     std::vector<float>              m_rms;
-    Sinusoid                        m_sinus;
+    Sawtooth                        m_sinus;
     bool                            m_zeroPadAtEnd;
 };
 

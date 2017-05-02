@@ -22,6 +22,7 @@ set(SOURCE_FILES src/FFT.hpp
                  src/MagnitudeSpectrum.hpp
                  src/MagnitudeSpectrum.cpp
                  src/Sinusoid.hpp
+                 src/Sawtooth.hpp
                  src/SineWaveSpeech.hpp
                  src/SineWaveSpeech.cpp
                  src/ResourcePath.hpp
