@@ -33,6 +33,7 @@ SineWaveSpeech::SineWaveSpeech(std::size_t FFTSize, bool zeroPadAtEnd) :
     m_sampleRate(0),
     m_sinus(440, 0.0, m_sampleRate),
     m_sawtooth(440, 0.0, m_sampleRate),
+    m_triangle(440, 0.0, m_sampleRate),
     m_toneGenerator(0),
     m_zeroPadAtEnd(zeroPadAtEnd)
 {
@@ -52,6 +53,7 @@ std::vector<float> SineWaveSpeech::generateSineWaveSpeech(std::vector<float> sam
     m_sampleRate = sampleRate;
     m_sinus.sampleRate = m_sampleRate;
     m_sawtooth.sampleRate = m_sampleRate;
+    m_triangle.sampleRate = m_sampleRate;
     
     if (m_zeroPadAtEnd)
     {
@@ -128,7 +130,7 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
 void SineWaveSpeech::nextToneGenerator()
 {
     ++m_toneGenerator;
-    m_toneGenerator = m_toneGenerator % 2;
+    m_toneGenerator = m_toneGenerator % 3;
 }
 
 
@@ -180,6 +182,10 @@ void SineWaveSpeech::generateSineWaveSound()
                         oldFrequency = m_sawtooth.frequency();
                         oldAmplitude = m_sawtooth.amplitude();
                         break;
+                    case 2:
+                        oldFrequency = m_triangle.frequency();
+                        oldAmplitude = m_triangle.amplitude();
+                        break;
                     default:
                         break;
                 }
@@ -219,6 +225,22 @@ void SineWaveSpeech::generateSineWaveSound()
 
                             m_outputSamples[x + i] = m_sawtooth.getNextSample();
                             break;
+
+                        case 2:
+                            if (i < interpolationSteps)
+                            {
+                                m_triangle.frequency(m_triangle.frequency() + frequencyStep);
+                                m_triangle.amplitude(m_triangle.amplitude() + amplitudeStep);
+                            }
+                            else if (i == interpolationSteps)
+                            {
+                                m_triangle.frequency(frequency);
+                                m_triangle.amplitude(amplitude);
+                            }
+
+                            m_outputSamples[x + i] = m_triangle.getNextSample();
+                            break;
+
                         default:
                             break;
                     }

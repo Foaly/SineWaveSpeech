@@ -18,23 +18,19 @@
 //
 ////////////////////////////////////////////////////////////
 
-#ifndef SAWTOOTH_INCLUDE
-#define SAWTOOTH_INCLUDE
+#ifndef TRIANGLE_INCLUDE
+#define TRIANGLE_INCLUDE
 
 #include <cmath>
 
-/**
- * \brief A sawtooth wave generator. A sawtooth wave ramps upward and then
- *        sharply drops. See https://en.wikipedia.org/wiki/Sawtooth_wave
- */
-
-class Sawtooth
+class Triangle
 {
 public:
-    Sawtooth(double _frequency, double _amplitude, double _sampleRate) :
-    m_amplitude(_amplitude),
-    sampleRate(_sampleRate),
-    m_nextSample(-1.0)
+    Triangle(double _frequency, double _amplitude, double _sampleRate) :
+        m_amplitude(_amplitude),
+        sampleRate(_sampleRate),
+        m_nextSample(0.0),
+        m_sign(1)
     {
         frequency(_frequency);
     }
@@ -43,11 +39,17 @@ public:
     {
         double sample = m_nextSample;
 
-        m_nextSample += m_step;
+        m_nextSample += m_step * m_sign;
 
         if (m_nextSample > 1.0)
         {
-            m_nextSample -= 2.0; // wrap around
+            m_nextSample = 1.0 - (m_nextSample - 1.0); // wrap around
+            m_sign = -1;
+        }
+        else if (m_nextSample < -1.0)
+        {
+            m_nextSample = -1.0 - (m_nextSample + 1.0); // wrap around
+            m_sign = 1;
         }
 
         return m_amplitude * sample;
@@ -56,7 +58,7 @@ public:
     void frequency(double frequency)
     {
         m_frequency = frequency;
-        m_step = 2.0 * m_frequency / sampleRate;
+        m_step = 4.0 * m_frequency / sampleRate;
     }
 
     double frequency()
@@ -74,13 +76,15 @@ public:
         return m_amplitude;
     }
 
+
     double sampleRate;
 
 private:
-    double m_amplitude;
     double m_frequency;
+    double m_amplitude;
     double m_nextSample;
+    signed char m_sign;
     double m_step;
 };
 
-#endif // SAWTOOTH_INCLUDE
+#endif // TRIANGLE_INCLUDE

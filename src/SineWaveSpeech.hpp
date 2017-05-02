@@ -29,6 +29,7 @@
 #include "MagnitudeSpectrum.hpp"
 #include "Sinusoid.hpp"
 #include "Sawtooth.hpp"
+#include "Triangle.hpp"
 
 class SineWaveSpeech
 {
@@ -52,6 +53,7 @@ private:
     std::vector<float>              m_rms;
     Sinusoid                        m_sinus;
     Sawtooth                        m_sawtooth;
+    Triangle                        m_triangle;
     std::atomic<unsigned int>       m_toneGenerator;
     bool                            m_zeroPadAtEnd;
 };
