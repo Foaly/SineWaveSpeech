@@ -95,6 +95,7 @@ public:
 
         for(int i = 0; i  < nframes; ++i)
         {
+            std::cout << out[i] << std::endl;
             outBufs[0][i] = out[i];
         }
 

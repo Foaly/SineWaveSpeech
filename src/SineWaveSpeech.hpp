@@ -51,11 +51,12 @@ private:
     std::vector<std::vector<float>> m_magnitudes;
     std::vector<float>              m_outputSamples;
     std::vector<float>              m_rms;
-    Sinusoid                        m_sinus;
-    Sawtooth                        m_sawtooth;
-    Triangle                        m_triangle;
+    std::vector<Sinusoid>                        m_sinus;
+    std::vector<Sawtooth>                        m_sawtooth;
+    std::vector<Triangle>                        m_triangle;
     std::atomic<unsigned int>       m_toneGenerator;
     bool                            m_zeroPadAtEnd;
+    int                             m_voices;
 };
 
 

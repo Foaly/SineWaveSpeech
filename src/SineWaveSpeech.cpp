@@ -31,13 +31,15 @@ SineWaveSpeech::SineWaveSpeech(std::size_t FFTSize, bool zeroPadAtEnd) :
     m_FFTSize(FFTSize),
     m_magnitudeSpectrum(FFTSize, MagnitudeSpectrum::Range::ExcludeDC_IncludeNyquist),
     m_sampleRate(0),
-    m_sinus(440, 0.0, m_sampleRate),
-    m_sawtooth(440, 0.0, m_sampleRate),
-    m_triangle(440, 0.0, m_sampleRate),
     m_toneGenerator(0),
-    m_zeroPadAtEnd(zeroPadAtEnd)
+    m_zeroPadAtEnd(zeroPadAtEnd),
+    m_voices (2)
 {
-    
+    for (int i=0; i < 10; ++i) {
+        m_sinus.push_back(Sinusoid(440, 0.0, m_sampleRate));
+        m_sawtooth.push_back(Sawtooth(440, 0.0, m_sampleRate));
+        m_triangle.push_back(Triangle(440, 0.0, m_sampleRate));
+    }
 }
 
 /**
@@ -51,9 +53,12 @@ SineWaveSpeech::SineWaveSpeech(std::size_t FFTSize, bool zeroPadAtEnd) :
 std::vector<float> SineWaveSpeech::generateSineWaveSpeech(std::vector<float> samples, std::size_t sampleRate)
 {
     m_sampleRate = sampleRate;
-    m_sinus.sampleRate = m_sampleRate;
-    m_sawtooth.sampleRate = m_sampleRate;
-    m_triangle.sampleRate = m_sampleRate;
+
+    for (int i=0; i < 10; ++i) {
+        m_sinus[i].sampleRate = m_sampleRate;
+        m_sawtooth[i].sampleRate = m_sampleRate;
+        m_triangle[i].sampleRate = m_sampleRate;
+    }
     
     if (m_zeroPadAtEnd)
     {
@@ -145,112 +150,128 @@ void SineWaveSpeech::generateSineWaveSound()
     
     for (auto& mag: m_magnitudes)
     {
-        // find the highest amplitude
-        auto highestAmp = std::max_element(mag.begin(), mag.end());
-        
-        // calculate the frequency
-        unsigned int index = std::distance(mag.begin(), highestAmp);
-        float frequency = middleFrequency + bandwidth * index;
-        //float amplitude = *highestAmp;
-        
-        if (frequency > 3000)
-        {
-            std::fill_n(m_outputSamples.begin() + x, 256, 0.f);
-        }
-        else
-        {
-        
-            float totalChunckEnergy = std::accumulate(mag.begin(), mag.end(), 0.f); // TODO: overflows bigger than 1.f
-            //std::cout << totalChunckEnergy << std::endl;
-                
-            float amplitude = std::min(m_rms[currentBlock] * std::sqrt(2.f), 1.f); // clamp to 1, because sometimes
-            //std::cout << amplitude << std::endl;
-            
-            // threshold
-            //if (amplitude > 0.01)
-            //{
-                //sinus.frequency(frequency);
-                //sinus.amplitude(amplitude);
-            
-                int interpolationSteps = 50;
-                double oldFrequency = m_sinus.frequency();
-                double oldAmplitude = m_sinus.amplitude();
+        auto highestAmp = mag.begin();
+        for (int j=0; j < 2; ++j) {
+            // find the highest amplitude
+            highestAmp = std::max_element(highestAmp, mag.end());
 
-                switch (m_toneGenerator)
-                {
-                    case 1:
-                        oldFrequency = m_sawtooth.frequency();
-                        oldAmplitude = m_sawtooth.amplitude();
-                        break;
-                    case 2:
-                        oldFrequency = m_triangle.frequency();
-                        oldAmplitude = m_triangle.amplitude();
-                        break;
-                    default:
-                        break;
-                }
+            // calculate the frequency
+            unsigned int index = std::distance(mag.begin(), highestAmp);
+            float frequency = middleFrequency + bandwidth * index;
+            //float amplitude = *highestAmp;
 
-                double frequencyStep = (frequency - oldFrequency) / interpolationSteps;
-                double amplitudeStep = (amplitude - oldAmplitude) / interpolationSteps;
-            
-                for (int i = 0; i < 256; i++)
-                {
+            if (frequency > 3000)
+            {
+                std::fill_n(m_outputSamples.begin() + x, 256, 0.f);
+            }
+            else
+            {
+
+                float totalChunckEnergy = std::accumulate(mag.begin(), mag.end(), 0.f); // TODO: overflows bigger than 1.f
+                //std::cout << totalChunckEnergy << std::endl;
+
+                float amplitude = std::min(m_rms[currentBlock] * std::sqrt(2.f), 1.f); // clamp to 1, because sometimes
+                amplitude *= 1.f / static_cast<float>(j + 1);
+                //std::cout << amplitude << std::endl;
+
+                // threshold
+                //if (amplitude > 0.01)
+                //{
+                    //sinus.frequency(frequency);
+                    //sinus.amplitude(amplitude);
+
+                    int interpolationSteps = 50;
+                    double oldFrequency = m_sinus[j].frequency();
+                    double oldAmplitude = m_sinus[j].amplitude();
+
                     switch (m_toneGenerator)
                     {
-                        case 0:
-                            if (i < interpolationSteps)
-                            {
-                                m_sinus.frequency(m_sinus.frequency() + frequencyStep);
-                                m_sinus.amplitude(m_sinus.amplitude() + amplitudeStep);
-                            }
-                            else if (i == interpolationSteps)
-                            {
-                                m_sinus.frequency(frequency);
-                                m_sinus.amplitude(amplitude);
-                            }
-
-                            m_outputSamples[x + i] = m_sinus.getNextSample();
-                            break;
                         case 1:
-                            if (i < interpolationSteps)
-                            {
-                                m_sawtooth.frequency(m_sawtooth.frequency() + frequencyStep);
-                                m_sawtooth.amplitude(m_sawtooth.amplitude() + amplitudeStep);
-                            }
-                            else if (i == interpolationSteps)
-                            {
-                                m_sawtooth.frequency(frequency);
-                                m_sawtooth.amplitude(amplitude);
-                            }
-
-                            m_outputSamples[x + i] = m_sawtooth.getNextSample();
+                            oldFrequency = m_sawtooth[j].frequency();
+                            oldAmplitude = m_sawtooth[j].amplitude();
                             break;
-
                         case 2:
-                            if (i < interpolationSteps)
-                            {
-                                m_triangle.frequency(m_triangle.frequency() + frequencyStep);
-                                m_triangle.amplitude(m_triangle.amplitude() + amplitudeStep);
-                            }
-                            else if (i == interpolationSteps)
-                            {
-                                m_triangle.frequency(frequency);
-                                m_triangle.amplitude(amplitude);
-                            }
-
-                            m_outputSamples[x + i] = m_triangle.getNextSample();
+                            oldFrequency = m_triangle[j].frequency();
+                            oldAmplitude = m_triangle[j].amplitude();
                             break;
-
                         default:
                             break;
                     }
 
-                }
-            //}
-            //else
-            //{
-            //    std::fill_n(m_outputSamples.begin() + x, 256, 0.f);
-            //}
+                    double frequencyStep = (frequency - oldFrequency) / interpolationSteps;
+                    double amplitudeStep = (amplitude - oldAmplitude) / interpolationSteps;
+
+                    for (int i = 0; i < m_FFTSize/2; i++)
+                    {
+                        switch (m_toneGenerator)
+                        {
+                            case 0:
+                                if (i < interpolationSteps)
+                                {
+                                    m_sinus[j].frequency(m_sinus[j].frequency() + frequencyStep);
+                                    m_sinus[j].amplitude(m_sinus[j].amplitude() + amplitudeStep);
+                                }
+                                else if (i == interpolationSteps)
+                                {
+                                    m_sinus[j].frequency(frequency);
+                                    m_sinus[j].amplitude(amplitude);
+                                }
+
+                                m_outputSamples[x + i] += m_sinus[j].getNextSample();
+
+                                break;
+                            case 1:
+                                if (i < interpolationSteps)
+                                {
+                                    m_sawtooth[j].frequency(m_sawtooth[j].frequency() + frequencyStep);
+                                    m_sawtooth[j].amplitude(m_sawtooth[j].amplitude() + amplitudeStep);
+                                }
+                                else if (i == interpolationSteps)
+                                {
+                                    m_sawtooth[j].frequency(frequency);
+                                    m_sawtooth[j].amplitude(amplitude);
+                                }
+
+                                m_outputSamples[x + i] += m_sawtooth[j].getNextSample();
+                                break;
+
+                            case 2:
+                                if (i < interpolationSteps)
+                                {
+                                    m_triangle[j].frequency(m_triangle[j].frequency() + frequencyStep);
+                                    m_triangle[j].amplitude(m_triangle[j].amplitude() + amplitudeStep);
+                                }
+                                else if (i == interpolationSteps)
+                                {
+                                    m_triangle[j].frequency(frequency);
+                                    m_triangle[j].amplitude(amplitude);
+                                }
+
+                                m_outputSamples[x + i] += m_triangle[j].getNextSample();
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                    }
+                //}
+                //else
+                //{
+                //    std::fill_n(m_outputSamples.begin() + x, 256, 0.f);
+                //}
+            }
+
+            auto last = &highestAmp;
+            while (highestAmp < mag.end() && last >= &highestAmp)
+            {
+                last = &highestAmp;
+                ++highestAmp;
+            }
+
+            if (highestAmp < mag.end()) {
+                break;
+            }
         }
         
         x += m_FFTSize / 2;
