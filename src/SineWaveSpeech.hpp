@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <atomic>
+#include <memory>
 
 #include "MagnitudeSpectrum.hpp"
 #include "ToneGenerator.hpp"

@@ -24,7 +24,6 @@
 #include <iomanip>
 #include <numeric>
 #include <algorithm>
-#include <memory>
 
 #include "SineWaveSpeech.hpp"
 #include "Sinusoid.hpp"
