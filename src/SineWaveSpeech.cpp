@@ -24,20 +24,23 @@
 #include <iomanip>
 #include <numeric>
 #include <algorithm>
+#include <memory>
 
 #include "SineWaveSpeech.hpp"
+#include "Sinusoid.hpp"
+#include "Triangle.hpp"
+#include "Sawtooth.hpp"
 
 SineWaveSpeech::SineWaveSpeech(std::size_t FFTSize, bool zeroPadAtEnd) :
     m_FFTSize(FFTSize),
     m_magnitudeSpectrum(FFTSize, MagnitudeSpectrum::Range::ExcludeDC_IncludeNyquist),
     m_sampleRate(0),
-    m_sinus(440, 0.0, m_sampleRate),
-    m_sawtooth(440, 0.0, m_sampleRate),
-    m_triangle(440, 0.0, m_sampleRate),
-    m_toneGenerator(0),
+    m_currentToneGenerator(0),
     m_zeroPadAtEnd(zeroPadAtEnd)
 {
-    
+    m_toneGenertors.push_back( std::make_unique<Sinusoid>(440, 0.0, m_sampleRate) );
+    m_toneGenertors.push_back( std::make_unique<Sawtooth>(440, 0.0, m_sampleRate) );
+    m_toneGenertors.push_back( std::make_unique<Triangle>(440, 0.0, m_sampleRate) );
 }
 
 /**
@@ -51,9 +54,9 @@ SineWaveSpeech::SineWaveSpeech(std::size_t FFTSize, bool zeroPadAtEnd) :
 std::vector<float> SineWaveSpeech::generateSineWaveSpeech(std::vector<float> samples, std::size_t sampleRate)
 {
     m_sampleRate = sampleRate;
-    m_sinus.sampleRate = m_sampleRate;
-    m_sawtooth.sampleRate = m_sampleRate;
-    m_triangle.sampleRate = m_sampleRate;
+    
+    for(auto& t: m_toneGenertors)
+        t->sampleRate = m_sampleRate;
     
     if (m_zeroPadAtEnd)
     {
@@ -115,8 +118,8 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
 
 void SineWaveSpeech::nextToneGenerator()
 {
-    ++m_toneGenerator;
-    m_toneGenerator = m_toneGenerator % 3;
+    ++m_currentToneGenerator;
+    m_currentToneGenerator = m_currentToneGenerator % m_toneGenertors.size();
 }
 
 
@@ -137,7 +140,6 @@ void SineWaveSpeech::generateSineWaveSound()
         // calculate the frequency
         unsigned int index = std::distance(mag.begin(), highestAmp);
         float frequency = middleFrequency + bandwidth * index;
-        //float amplitude = *highestAmp;
         
         if (frequency > 3000)
         {
@@ -146,81 +148,29 @@ void SineWaveSpeech::generateSineWaveSound()
         else
         {
             float amplitude = std::min(m_rms[currentBlock] * std::sqrt(2.f), 1.f); // clamp to 1, because sometimes
-            //std::cout << amplitude << std::endl;
+            const auto& toneGenertor = m_toneGenertors[m_currentToneGenerator];
             
             int interpolationSteps = 50;
-            double oldFrequency = m_sinus.frequency();
-            double oldAmplitude = m_sinus.amplitude();
-
-            switch (m_toneGenerator)
-            {
-                case 1:
-                    oldFrequency = m_sawtooth.frequency();
-                    oldAmplitude = m_sawtooth.amplitude();
-                    break;
-                case 2:
-                    oldFrequency = m_triangle.frequency();
-                    oldAmplitude = m_triangle.amplitude();
-                    break;
-                default:
-                    break;
-            }
+            double oldFrequency = toneGenertor->frequency();
+            double oldAmplitude = toneGenertor->amplitude();
 
             double frequencyStep = (frequency - oldFrequency) / interpolationSteps;
             double amplitudeStep = (amplitude - oldAmplitude) / interpolationSteps;
         
             for (int i = 0; i < 256; i++)
             {
-                switch (m_toneGenerator)
+                if (i < interpolationSteps)
                 {
-                    case 0:
-                        if (i < interpolationSteps)
-                        {
-                            m_sinus.frequency(m_sinus.frequency() + frequencyStep);
-                            m_sinus.amplitude(m_sinus.amplitude() + amplitudeStep);
-                        }
-                        else if (i == interpolationSteps)
-                        {
-                            m_sinus.frequency(frequency);
-                            m_sinus.amplitude(amplitude);
-                        }
-
-                        m_outputSamples[x + i] = m_sinus.getNextSample();
-                        break;
-                    case 1:
-                        if (i < interpolationSteps)
-                        {
-                            m_sawtooth.frequency(m_sawtooth.frequency() + frequencyStep);
-                            m_sawtooth.amplitude(m_sawtooth.amplitude() + amplitudeStep);
-                        }
-                        else if (i == interpolationSteps)
-                        {
-                            m_sawtooth.frequency(frequency);
-                            m_sawtooth.amplitude(amplitude);
-                        }
-
-                        m_outputSamples[x + i] = m_sawtooth.getNextSample();
-                        break;
-
-                    case 2:
-                        if (i < interpolationSteps)
-                        {
-                            m_triangle.frequency(m_triangle.frequency() + frequencyStep);
-                            m_triangle.amplitude(m_triangle.amplitude() + amplitudeStep);
-                        }
-                        else if (i == interpolationSteps)
-                        {
-                            m_triangle.frequency(frequency);
-                            m_triangle.amplitude(amplitude);
-                        }
-
-                        m_outputSamples[x + i] = m_triangle.getNextSample();
-                        break;
-
-                    default:
-                        break;
+                    toneGenertor->frequency(toneGenertor->frequency() + frequencyStep);
+                    toneGenertor->amplitude(toneGenertor->amplitude() + amplitudeStep);
                 }
-
+                else if (i == interpolationSteps)
+                {
+                    toneGenertor->frequency(frequency);
+                    toneGenertor->amplitude(amplitude);
+                }
+                
+                m_outputSamples[x + i] = toneGenertor->getNextSample();
             }
         }
         

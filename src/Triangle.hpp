@@ -21,21 +21,20 @@
 #ifndef TRIANGLE_INCLUDE
 #define TRIANGLE_INCLUDE
 
-#include <cmath>
+#include "ToneGenerator.hpp"
 
-class Triangle
+class Triangle : public ToneGenerator
 {
 public:
     Triangle(double _frequency, double _amplitude, double _sampleRate) :
-        sampleRate(_sampleRate),
-        m_amplitude(_amplitude),
+        ToneGenerator(_frequency, _amplitude, _sampleRate),
         m_nextSample(0.0),
         m_sign(1)
     {
         frequency(_frequency);
     }
 
-    double getNextSample()
+    double getNextSample() override
     {
         double sample = m_nextSample;
 
@@ -55,33 +54,17 @@ public:
         return m_amplitude * sample;
     }
 
-    void frequency(double frequency)
+    void frequency(double frequency) override
     {
         m_frequency = frequency;
         m_step = 4.0 * m_frequency / sampleRate;
     }
+    
+    using ToneGenerator::frequency;
+    using ToneGenerator::amplitude;
 
-    double frequency()
-    {
-        return m_frequency;
-    }
-
-    void amplitude(double amplitude)
-    {
-        m_amplitude = amplitude;
-    }
-
-    double amplitude()
-    {
-        return m_amplitude;
-    }
-
-
-    double sampleRate;
 
 private:
-    double m_frequency;
-    double m_amplitude;
     double m_nextSample;
     signed char m_sign;
     double m_step;

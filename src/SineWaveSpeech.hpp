@@ -27,9 +27,7 @@
 #include <atomic>
 
 #include "MagnitudeSpectrum.hpp"
-#include "Sinusoid.hpp"
-#include "Sawtooth.hpp"
-#include "Triangle.hpp"
+#include "ToneGenerator.hpp"
 
 class SineWaveSpeech
 {
@@ -45,17 +43,15 @@ private:
     void generateMagnitudeSpecta(std::vector<float>& samples, std::size_t sampleRate);
     void generateSineWaveSound();
     
-    std::size_t                     m_FFTSize;
-    MagnitudeSpectrum               m_magnitudeSpectrum;
-    std::size_t                     m_sampleRate;
-    std::vector<std::vector<float>> m_magnitudes;
-    std::vector<float>              m_outputSamples;
-    std::vector<float>              m_rms;
-    Sinusoid                        m_sinus;
-    Sawtooth                        m_sawtooth;
-    Triangle                        m_triangle;
-    std::atomic<unsigned int>       m_toneGenerator;
-    bool                            m_zeroPadAtEnd;
+    std::size_t                                    m_FFTSize;
+    MagnitudeSpectrum                              m_magnitudeSpectrum;
+    std::size_t                                    m_sampleRate;
+    std::vector<std::vector<float>>                m_magnitudes;
+    std::vector<float>                             m_outputSamples;
+    std::vector<float>                             m_rms;
+    std::atomic<unsigned int>                      m_currentToneGenerator;
+    std::vector<std::unique_ptr<ToneGenerator>>    m_toneGenertors;
+    bool                                           m_zeroPadAtEnd;
 };
 
 

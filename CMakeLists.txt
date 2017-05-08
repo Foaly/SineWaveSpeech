@@ -21,6 +21,7 @@ set(SOURCE_FILES src/FFT.hpp
                  src/FFT.cpp
                  src/MagnitudeSpectrum.hpp
                  src/MagnitudeSpectrum.cpp
+                 src/ToneGenerator.hpp
                  src/Sinusoid.hpp
                  src/Sawtooth.hpp
                  src/Triangle.hpp

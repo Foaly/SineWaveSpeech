@@ -21,7 +21,7 @@
 #ifndef SINUSOID_INCLUDE
 #define SINUSOID_INCLUDE
 
-#include <cmath>
+#include "ToneGenerator.hpp"
 
 /*
  * \brief A sine wave generator. It uses matrix rotation as an optimization.
@@ -32,19 +32,18 @@
  *        more efficent. Also note that the phase stays continous when the frequency changes.
  */
 
-class Sinusoid
+class Sinusoid : public ToneGenerator
 {
 public:
     Sinusoid(double _frequency, double _amplitude, double _sampleRate) :
-        sampleRate(_sampleRate),
-        m_amplitude(_amplitude),
+        ToneGenerator(_frequency, _amplitude, _sampleRate),
         m_x(0.0),
         m_y(1.0)
     {
         frequency(_frequency);
     }
 
-    double getNextSample()
+    double getNextSample() override
     {
         double oldX = m_x;
         m_x = m_x * m_cosinus + m_y * m_sinus;
@@ -53,7 +52,7 @@ public:
         return m_amplitude * oldX;
     }
     
-    void frequency(double frequency)
+    void frequency(double frequency) override
     {
         m_frequency = frequency;
         double step = twoPI * m_frequency / sampleRate;
@@ -61,27 +60,11 @@ public:
         m_cosinus = std::cos(step);
     }
     
-    double frequency()
-    {
-        return m_frequency;
-    }
-    
-    void amplitude(double amplitude)
-    {
-        m_amplitude = amplitude;
-    }
-    
-    double amplitude()
-    {
-        return m_amplitude;
-    }
+    using ToneGenerator::frequency;
+    using ToneGenerator::amplitude;
 
-    
-    double sampleRate;
-    
+
 private:
-    double m_amplitude;
-    double m_frequency;
     double m_sinus;
     double m_cosinus;
     double m_x;

@@ -21,25 +21,24 @@
 #ifndef SAWTOOTH_INCLUDE
 #define SAWTOOTH_INCLUDE
 
-#include <cmath>
+#include "ToneGenerator.hpp"
 
 /**
  * \brief A sawtooth wave generator. A sawtooth wave ramps upward and then
  *        sharply drops. See https://en.wikipedia.org/wiki/Sawtooth_wave
  */
 
-class Sawtooth
+class Sawtooth : public ToneGenerator
 {
 public:
     Sawtooth(double _frequency, double _amplitude, double _sampleRate) :
-    sampleRate(_sampleRate),
-    m_amplitude(_amplitude),
-    m_nextSample(-1.0)
+        ToneGenerator(_frequency, _amplitude, _sampleRate),
+        m_nextSample(-1.0)
     {
         frequency(_frequency);
     }
 
-    double getNextSample()
+    double getNextSample() override
     {
         double sample = m_nextSample;
 
@@ -53,32 +52,17 @@ public:
         return m_amplitude * sample;
     }
 
-    void frequency(double frequency)
+    void frequency(double frequency) override
     {
         m_frequency = frequency;
         m_step = 2.0 * m_frequency / sampleRate;
     }
+    
+    using ToneGenerator::frequency;
+    using ToneGenerator::amplitude;
 
-    double frequency()
-    {
-        return m_frequency;
-    }
-
-    void amplitude(double amplitude)
-    {
-        m_amplitude = amplitude;
-    }
-
-    double amplitude()
-    {
-        return m_amplitude;
-    }
-
-    double sampleRate;
 
 private:
-    double m_amplitude;
-    double m_frequency;
     double m_nextSample;
     double m_step;
 };
