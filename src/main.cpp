@@ -51,7 +51,7 @@ int main(int, char const**)
     
     const size_t FFTSize = 512;
     const unsigned int sampleRate = originalSoundBuffer.getSampleRate();
-    SineWaveSpeech sineWaveSpeech(FFTSize);
+    SineWaveSpeech sineWaveSpeech(FFTSize, true);
     
     // get the samples as ints
     std::vector<sf::Int16> rawSamples(originalSoundBuffer.getSamples(), originalSoundBuffer.getSamples() + originalSoundBuffer.getSampleCount());

@@ -76,7 +76,7 @@ MagnitudeSpectrum::MagnitudeSpectrum(std::size_t FFTSize, Range spectrumRangeTyp
 
 void MagnitudeSpectrum::process(std::vector<float> sampleChunck)
 {
-    // haha wtf?x
+    // haha wtf?!
     m_window = generateHannWindow(m_FFTSize);
 
     // apply the window function

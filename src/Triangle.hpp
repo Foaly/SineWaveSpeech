@@ -27,8 +27,8 @@ class Triangle
 {
 public:
     Triangle(double _frequency, double _amplitude, double _sampleRate) :
-        m_amplitude(_amplitude),
         sampleRate(_sampleRate),
+        m_amplitude(_amplitude),
         m_nextSample(0.0),
         m_sign(1)
     {

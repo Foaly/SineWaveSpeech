@@ -80,9 +80,6 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
     // -1 to avoid out of bounds reading on last iteration because of our 50% sliding window
     const std::size_t numberOfRepeats = samples.size() / (m_FFTSize / 2) - 1;
     
-    float maxMagnitude = 0.f;
-    float minMagnitude = 0.f;
-    
     m_magnitudes.clear();
     m_magnitudes.reserve(numberOfRepeats);
     
@@ -108,22 +105,11 @@ void SineWaveSpeech::generateMagnitudeSpecta(std::vector<float>& samples, std::s
         
         chunckBegin += m_FFTSize / 2;
         
-        // find the max FFT bin
-        auto minmax = std::minmax_element(m_magnitudes.back().begin(), m_magnitudes.back().end());
-        // check if it's bigger than any previous one
-        if (*minmax.second > maxMagnitude)
-            maxMagnitude = *minmax.second;
-        if (*minmax.first < minMagnitude)
-            minMagnitude = *minmax.first;
-        
         // calculate the RMS of the sample block
         double meansquare = std::sqrt( ( std::inner_product( sampleChunck.begin(), sampleChunck.end(), sampleChunck.begin(), 0.0 ) ) / static_cast<double>( sampleChunck.size() ) );
         
         m_rms.push_back(meansquare);
     }
-    
-    //std::cout << std::fixed << std::setprecision(5);
-    //std::cout << "min: " << minMagnitude << " max: " << maxMagnitude << std::endl << std::endl;
 }
 
 
@@ -159,98 +145,83 @@ void SineWaveSpeech::generateSineWaveSound()
         }
         else
         {
-        
-            float totalChunckEnergy = std::accumulate(mag.begin(), mag.end(), 0.f); // TODO: overflows bigger than 1.f
-            //std::cout << totalChunckEnergy << std::endl;
-                
             float amplitude = std::min(m_rms[currentBlock] * std::sqrt(2.f), 1.f); // clamp to 1, because sometimes
             //std::cout << amplitude << std::endl;
             
-            // threshold
-            //if (amplitude > 0.01)
-            //{
-                //sinus.frequency(frequency);
-                //sinus.amplitude(amplitude);
-            
-                int interpolationSteps = 50;
-                double oldFrequency = m_sinus.frequency();
-                double oldAmplitude = m_sinus.amplitude();
+            int interpolationSteps = 50;
+            double oldFrequency = m_sinus.frequency();
+            double oldAmplitude = m_sinus.amplitude();
 
+            switch (m_toneGenerator)
+            {
+                case 1:
+                    oldFrequency = m_sawtooth.frequency();
+                    oldAmplitude = m_sawtooth.amplitude();
+                    break;
+                case 2:
+                    oldFrequency = m_triangle.frequency();
+                    oldAmplitude = m_triangle.amplitude();
+                    break;
+                default:
+                    break;
+            }
+
+            double frequencyStep = (frequency - oldFrequency) / interpolationSteps;
+            double amplitudeStep = (amplitude - oldAmplitude) / interpolationSteps;
+        
+            for (int i = 0; i < 256; i++)
+            {
                 switch (m_toneGenerator)
                 {
+                    case 0:
+                        if (i < interpolationSteps)
+                        {
+                            m_sinus.frequency(m_sinus.frequency() + frequencyStep);
+                            m_sinus.amplitude(m_sinus.amplitude() + amplitudeStep);
+                        }
+                        else if (i == interpolationSteps)
+                        {
+                            m_sinus.frequency(frequency);
+                            m_sinus.amplitude(amplitude);
+                        }
+
+                        m_outputSamples[x + i] = m_sinus.getNextSample();
+                        break;
                     case 1:
-                        oldFrequency = m_sawtooth.frequency();
-                        oldAmplitude = m_sawtooth.amplitude();
+                        if (i < interpolationSteps)
+                        {
+                            m_sawtooth.frequency(m_sawtooth.frequency() + frequencyStep);
+                            m_sawtooth.amplitude(m_sawtooth.amplitude() + amplitudeStep);
+                        }
+                        else if (i == interpolationSteps)
+                        {
+                            m_sawtooth.frequency(frequency);
+                            m_sawtooth.amplitude(amplitude);
+                        }
+
+                        m_outputSamples[x + i] = m_sawtooth.getNextSample();
                         break;
+
                     case 2:
-                        oldFrequency = m_triangle.frequency();
-                        oldAmplitude = m_triangle.amplitude();
+                        if (i < interpolationSteps)
+                        {
+                            m_triangle.frequency(m_triangle.frequency() + frequencyStep);
+                            m_triangle.amplitude(m_triangle.amplitude() + amplitudeStep);
+                        }
+                        else if (i == interpolationSteps)
+                        {
+                            m_triangle.frequency(frequency);
+                            m_triangle.amplitude(amplitude);
+                        }
+
+                        m_outputSamples[x + i] = m_triangle.getNextSample();
                         break;
+
                     default:
                         break;
                 }
 
-                double frequencyStep = (frequency - oldFrequency) / interpolationSteps;
-                double amplitudeStep = (amplitude - oldAmplitude) / interpolationSteps;
-            
-                for (int i = 0; i < 256; i++)
-                {
-                    switch (m_toneGenerator)
-                    {
-                        case 0:
-                            if (i < interpolationSteps)
-                            {
-                                m_sinus.frequency(m_sinus.frequency() + frequencyStep);
-                                m_sinus.amplitude(m_sinus.amplitude() + amplitudeStep);
-                            }
-                            else if (i == interpolationSteps)
-                            {
-                                m_sinus.frequency(frequency);
-                                m_sinus.amplitude(amplitude);
-                            }
-
-                            m_outputSamples[x + i] = m_sinus.getNextSample();
-                            break;
-                        case 1:
-                            if (i < interpolationSteps)
-                            {
-                                m_sawtooth.frequency(m_sawtooth.frequency() + frequencyStep);
-                                m_sawtooth.amplitude(m_sawtooth.amplitude() + amplitudeStep);
-                            }
-                            else if (i == interpolationSteps)
-                            {
-                                m_sawtooth.frequency(frequency);
-                                m_sawtooth.amplitude(amplitude);
-                            }
-
-                            m_outputSamples[x + i] = m_sawtooth.getNextSample();
-                            break;
-
-                        case 2:
-                            if (i < interpolationSteps)
-                            {
-                                m_triangle.frequency(m_triangle.frequency() + frequencyStep);
-                                m_triangle.amplitude(m_triangle.amplitude() + amplitudeStep);
-                            }
-                            else if (i == interpolationSteps)
-                            {
-                                m_triangle.frequency(frequency);
-                                m_triangle.amplitude(amplitude);
-                            }
-
-                            m_outputSamples[x + i] = m_triangle.getNextSample();
-                            break;
-
-                        default:
-                            break;
-                    }
-
-                }
-            //}
-            //else
-            //{
-            //    std::fill_n(m_outputSamples.begin() + x, 256, 0.f);
-            //}
+            }
         }
         
         x += m_FFTSize / 2;

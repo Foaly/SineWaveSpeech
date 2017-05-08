@@ -32,8 +32,8 @@ class Sawtooth
 {
 public:
     Sawtooth(double _frequency, double _amplitude, double _sampleRate) :
-    m_amplitude(_amplitude),
     sampleRate(_sampleRate),
+    m_amplitude(_amplitude),
     m_nextSample(-1.0)
     {
         frequency(_frequency);
